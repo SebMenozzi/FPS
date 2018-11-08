@@ -1,0 +1,72 @@
+nom Skybox
+
+
+
+image skybox/nord.bmp
+image skybox/sud.bmp
+image skybox/ouest.bmp
+image skybox/est.bmp
+image skybox/haut.bmp
+image skybox/bas.bmp
+
+
+
+rst 0.0 0.0 0.0 1.0      500.0 500.0 500.0      0.0 0.0 0.0
+
+
+
+
+
+image skybox/nord.bmp
+{
+	0   0     -1 -1  1 
+	0   256   -1 -1 -1 
+	256 256   -1  1 -1 
+	256 0     -1  1  1 
+}
+
+image skybox/sud.bmp
+{
+	0   0      1  1  1 
+	0   256    1  1 -1 
+	256 256    1 -1 -1 
+	256 0      1 -1  1 
+}
+
+image skybox/ouest.bmp
+{
+	0   0      1 -1  1 
+	0   256    1 -1 -1 
+	256 256   -1 -1 -1 
+	256 0     -1 -1  1 
+}
+
+image skybox/est.bmp
+{
+	0   0     -1  1  1 
+	0   256   -1  1 -1 
+	256 256    1  1 -1 
+	256 0      1  1  1 
+}
+
+image skybox/bas.bmp
+{
+	0   0     -1 -1 -1 
+	0   256    1 -1 -1 
+	256 256    1  1 -1 
+	256 0     -1  1 -1 
+}
+
+image skybox/haut.bmp
+{
+	0   0     -1  1  1 
+	0   256    1  1  1 
+	256 256    1 -1  1 
+	256 0     -1 -1  1 
+}
+
+
+
+
+
+
