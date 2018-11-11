@@ -1,0 +1,5 @@
+#!/bin/sh
+# make
+cd ../../
+make re
+cd bin/Debug

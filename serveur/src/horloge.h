@@ -4,12 +4,13 @@
 
 class Horloge
 {
-    public:
-        Horloge();
-        void regler(sint32 heure);
-        sint32 heure(void);
-    private:
-        sint32 heureDepart;
+  public:
+    Horloge();
+    void regler(sint32 heure);
+    sint32 heure(void);
+  private:
+  	sint32 getTicks(void);
+    sint32 heureDepart;
 };
 
 #endif // HORLOGE_H_INCLUDED

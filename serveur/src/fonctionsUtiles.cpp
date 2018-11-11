@@ -1,5 +1,7 @@
 #include "fonctionsUtiles.h"
 
+#include <sys/types.h>  // For stat()
+#include <sys/stat.h>   // For stat()
 #include <sstream>
 
 std::string decapsuler(std::string* message)
@@ -70,3 +72,19 @@ std::string uint32EnString(uint32 valeur)
     return chaine;
 }
 
+int creerDossier(std::string chemin)
+{
+  int error = 0;
+  #if defined(_WIN32)
+    error = _mkdir(chemin.c_str());
+  #else
+    error= mkdir(chemin.c_str(), 0733);
+  #endif
+  return error;
+}
+
+int dossierExiste(std::string chemin)
+{
+  struct stat st;
+  return stat(chemin.c_str(), &st);
+}

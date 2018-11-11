@@ -5,38 +5,35 @@
   #define INT_MIN ((int)0x80000000)
 #endif
 
-Personnage::Personnage(float16 positionX, float16 positionY, float16 positionZ, float16 angleHorizontal, std::string nomFichier) : Objet3DStatique(nomFichier)
+Personnage::Personnage(float16 positionX, float16 positionY, float16 positionZ, float16 angleHorizontal, float16 angleVertical, float16 rayon, std::string nomFichier) : Objet3DStatique(nomFichier)
 {
   this->positionX = positionX;
   this->positionY = positionY;
   this->positionZ = positionZ;
-  this->angleHorizontal = angleHorizontal;
-  this->rayon = 0.3f;
-  this->angleVertical = 0.0f;
-
+  this->angleHorizontal = angleHorizontal; // En degrès, sens trigo vue de +Z vers -Z (du dessus) [-3600.0 .. +3600.0[
+  this->angleVertical = angleVertical; // En degrès ; 0 = horizon ; > 0 = vers le ciel ; < 0 = vers les sol [-45 .. +45]
+  this->rayon = rayon;
   this->m_heureReapparition = INT_MIN;
-
   this->nbTirGagnant = 0;
   this->nbTirRecu = 0;
-
   this->m_pseudo = "x";
 
-  this->objet3D = new Objet3D("Dragon/dragon.obj");
+  //this->objet3D = new Objet3D(nomFichier);
 }
 
 Personnage::~Personnage(void)
 {
-  delete this->objet3D;
+  //delete this->objet3D;
 }
 
-void Personnage::deplacer(float16 distance, float16 direction, bool8 entourage[8])
+void Personnage::deplacer(float16 distance, float16 direction, bool8 entourage[8], float16 hauteurHeightmap)
 {
   const float EPSILON = 0.001f;
 
-  if (EPSILON >= distance) return;
+  //if (EPSILON >= distance) return;
 
   // Bridage de la distance pour eviter la perte de collision (a calculer et verifier)
-  float16 distanceMax = this->rayon - EPSILON;
+  //float16 distanceMax = this->rayon - EPSILON;
 
   // Calcule des segments pour ce deplacement
   /*unsigned long nbGrandsSegments = (unsigned long) (distance / distanceMax);
@@ -45,17 +42,19 @@ void Personnage::deplacer(float16 distance, float16 direction, bool8 entourage[8
   // Pour chaque grand segment
   for(uint32 i = 0; i < nbGrandsSegments; i++)
   {
-      // Deplacement d'un peu moin d'un grand segment
+      // Deplacement d'un peu moins d'un grand segment
       this->deplacer(distanceMax - EPSILON, direction, entourage);
   }
 
   // Distance restante
   distance = distancePetitSegment;*/
 
+  /*
   if (distance > distanceMax)
   {
     distance = distanceMax;
   }
+  */
 
   direction += this->angleHorizontal;
 
@@ -88,10 +87,14 @@ void Personnage::deplacer(float16 distance, float16 direction, bool8 entourage[8
   }
 
   // Calcule de la position cible du personnage
-  float16 positionCibleY = this->positionY - distance * cos(direction * M_PI / 180.0);
   float16 positionCibleX = this->positionX - distance * sin(direction * M_PI / 180.0);
-  //float16 positionCibleY = this->positionY - distance * sin(direction * M_PI / 180.0);
-  //float16 positionCibleX = this->positionX - distance * cos(direction * M_PI / 180.0);
+  float16 positionCibleY = this->positionY - distance * cos(direction * M_PI / 180.0);
+
+  this->positionX = positionCibleX;
+  this->positionY = positionCibleY;
+  this->positionZ = hauteurHeightmap;
+
+  /*
 
   // GESTION DES COLLISIONS AVEC MUR EST
 
@@ -132,10 +135,7 @@ void Personnage::deplacer(float16 distance, float16 direction, bool8 entourage[8
 
 
   // GESTION DES COLLISIONS AVEC MUR AU SUD-EST
-  if (1 == entourage[7]
-      && ceil(positionCibleY + this->rayon) != ceil(positionY)
-      && ceil(positionCibleX + this->rayon) != ceil(positionX)
-     )
+  if (1 == entourage[7] && ceil(positionCibleY + this->rayon) != ceil(positionY) && ceil(positionCibleX + this->rayon) != ceil(positionX))
   {
     if (positionCibleY > this->positionY && positionCibleX > this->positionX) // Approche
     {
@@ -164,14 +164,11 @@ void Personnage::deplacer(float16 distance, float16 direction, bool8 entourage[8
     else if (positionCibleX < this->positionX) // Eloigne en Y
     {
       positionCibleY -= (positionCibleY + this->rayon) - (sint32)(positionCibleY + this->rayon);
-      }
+    }
   }
 
   // GESTION DES COLLISIONS AVEC MUR AU SUD-OUEST
-  if (1 == entourage[5]
-      && ceil(positionCibleY + this->rayon) != ceil(positionY)
-      && floor(positionCibleX - this->rayon) != floor(positionX)
-     )
+  if (1 == entourage[5] && ceil(positionCibleY + this->rayon) != ceil(positionY) && floor(positionCibleX - this->rayon) != floor(positionX))
   {
     if (positionCibleY < this->positionY) // Eloigne en X
     {
@@ -203,10 +200,7 @@ void Personnage::deplacer(float16 distance, float16 direction, bool8 entourage[8
   }
 
   // GESTION DES COLLISIONS AVEC MUR AU NORD-OUEST
-  if (1 == entourage[0]
-      && floor(positionCibleY - this->rayon) != floor(positionY)
-      && floor(positionCibleX - this->rayon) != floor(positionX)
-     )
+  if (1 == entourage[0] && floor(positionCibleY - this->rayon) != floor(positionY) && floor(positionCibleX - this->rayon) != floor(positionX))
   {
     if (positionCibleY > this->positionY) // Eloigne en X
     {
@@ -239,9 +233,7 @@ void Personnage::deplacer(float16 distance, float16 direction, bool8 entourage[8
   }
 
   // GESTION DES COLLISIONS AVEC MUR AU NORD-EST
-  if (1 == entourage[2] &&
-      floor(positionCibleY - this->rayon) != floor(positionY) &&
-      ceil(positionCibleX + this->rayon) != ceil(positionX))
+  if (1 == entourage[2] && floor(positionCibleY - this->rayon) != floor(positionY) && ceil(positionCibleX + this->rayon) != ceil(positionX))
   {
     if (positionCibleY > this->positionY) // Eloigne en X
     {
@@ -271,9 +263,7 @@ void Personnage::deplacer(float16 distance, float16 direction, bool8 entourage[8
       }
     }
   }
-
-  this->positionY = positionCibleY;
-  this->positionX = positionCibleX;
+  */
 }
 
 /*
@@ -316,11 +306,22 @@ void Personnage::tournerVerticalement(float16 angle)
   }
 }
 
-void Personnage::positionSurLaCarte(sint32* x, sint32* y)
+void Personnage::goUp()
+{
+  this->positionZ += 0.05;
+}
+
+void Personnage::goDown()
+{
+  this->positionZ -= 0.05;
+}
+
+void Personnage::positionSurLaCarte(float16* x, float16* y, float16* z)
 {
   // Recupere la position du personnage sur la carte
-  *x = (sint32)this->positionX;
-  *y = (sint32)this->positionY;
+  *x = this->positionX;
+  *y = this->positionY;
+  *z = this->positionY;
 }
 
 void Personnage::regarder(void)
@@ -328,50 +329,57 @@ void Personnage::regarder(void)
   #define RADIANS_PAR_DEGRES 0.0174532925199
   #define HAUTEUR_OEIL_PERSONNAGE 0.55
 
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+
+  glRotatef(this->angleVertical, -1, 0, 0); // Hausse / baisse la tête
+
   gluLookAt(
     // Position de l'oeil
-    this->positionY, this->positionX, HAUTEUR_OEIL_PERSONNAGE,
+    this->positionY,
+    this->positionX,
+    //HAUTEUR_OEIL_PERSONNAGE,
+    this->positionZ + HAUTEUR_OEIL_PERSONNAGE,
 
     // Point vise
     this->positionY - cos(-this->angleHorizontal * RADIANS_PAR_DEGRES),
     this->positionX + sin(-this->angleHorizontal * RADIANS_PAR_DEGRES),
-    //this->positionX - cos(-angleHorizontal * RADIANS_PAR_DEGRES),
-    //this->positionY + sin(-this->angleHorizontal * RADIANS_PAR_DEGRES),
-    HAUTEUR_OEIL_PERSONNAGE + tan(this->angleVertical * RADIANS_PAR_DEGRES),
+    //HAUTEUR_OEIL_PERSONNAGE + tan(this->angleVertical * RADIANS_PAR_DEGRES),
+    this->positionZ + HAUTEUR_OEIL_PERSONNAGE,
 
     // La verticale est en Z
     0,0,1);
-
-  /* gluLookAt(
-      // Position de la camera
-      this->positionY + cos(-this->angleHorizontal * RADIANS_PAR_DEGRES),
-      this->positionX - sin(-this->angleHorizontal * RADIANS_PAR_DEGRES),
-      1,
-
-      // Point vise
-      this->positionY, this->positionX, 0,
-
-      // La verticale est en Z
-      0,0,1);*/
 }
 
-void Personnage::positionner(float16 x, float16 y)
+void Personnage::positionner(float16 x, float16 y, float16 z)
 {
   this->positionX = x;
   this->positionY = y;
+  this->positionZ = z;
 }
 
-void Personnage::orienter(float16 angle)
+void Personnage::orienter(float16 angleHorizontal, float16 angleVertical)
 {
-  this->angleHorizontal = angle;
+  this->angleHorizontal = angleHorizontal;
 
-  while (this->angleHorizontal >= 180.0f) // Lorsqu'on d�passe la limite (1/2 tour)
+  while (this->angleHorizontal >= 180.0f) // Lorsqu'on depasse la limite (1/2 tour)
   {
     this->angleHorizontal -= 360.0f;
   }
-  while (this->angleHorizontal < -180.0f) // Idem apr�s 1/2 tours vers la droite
+  while (this->angleHorizontal < -180.0f) // Idem apres 1/2 tours vers la droite
   {
     this->angleHorizontal += 360.0f;
+  }
+
+  this->angleVertical = angleVertical;
+
+  if (45.0f < this->angleVertical)
+  {
+    this->angleVertical = 45.0f;
+  }
+  else if (-45.0f > this->angleVertical)
+  {
+    this->angleVertical = -45.0f;
   }
 }
 
@@ -385,14 +393,24 @@ float16 Personnage::lirePositionY()
   return this->positionY;
 }
 
-float16 Personnage::lireAngle()
+float16 Personnage::lirePositionZ()
+{
+  return this->positionZ;
+}
+
+float16 Personnage::lireAngleHorizontal()
 {
   return this->angleHorizontal;
 }
 
-void Personnage::ajouterPosition(sint32 heure, float16 x, float16 y, float16 angleHorizontal)
+float16 Personnage::lireAngleVertical()
 {
-  this->historiqueDesPositions.ajouter(heure, x, y, angleHorizontal);
+  return this->angleVertical;
+}
+
+void Personnage::ajouterPosition(sint32 heure, float16 x, float16 y, float16 z, float16 angleHorizontal, float16 angleVertical)
+{
+  this->historiqueDesPositions.ajouter(heure, x, y, z, angleHorizontal, angleVertical);
 }
 
 bool8 Personnage::positionnerDepuisLHistorique(sint32 heure)
@@ -403,8 +421,9 @@ bool8 Personnage::positionnerDepuisLHistorique(sint32 heure)
 
   if (this->historiqueDesPositions.calculer(heure, &positionX, &positionY, &angle))
   {
-    this->positionner(positionX, positionY);
-    this->orienter(angle);
+    // TODO: calculer avec la composante Z
+    this->positionner(positionX, positionY, 0);
+    this->orienter(angle, 0);
 
     return TRUE;
   }
@@ -429,15 +448,16 @@ void Personnage::heureReapparition(sint32 heure)
   this->m_heureReapparition = heure;
 }
 
-Point Personnage::pointReapparition(void)
+Point3Float Personnage::pointReapparition(void)
 {
   return this->m_pointReapparition;
 }
 
-void Personnage::pointReapparition(Point point)
+void Personnage::pointReapparition(Point3Float point)
 {
   this->m_pointReapparition.x = point.x;
   this->m_pointReapparition.y = point.y;
+  this->m_pointReapparition.y = point.z;
 }
 
 float16 Personnage::angleReapparition(void)

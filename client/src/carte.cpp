@@ -179,6 +179,7 @@ void Carte::creerListeAffichage()
   // Fin de la liste d'affichage
   glEndList();
 }
+
 void Carte::entourage(sint32 x, sint32 y, bool8 entourage[8])
 {
   sint32 largeurCarte = this->largeurCarte;

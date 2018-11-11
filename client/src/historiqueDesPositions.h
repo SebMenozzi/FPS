@@ -11,15 +11,17 @@ class HistoriqueDesPositions
     sint32 heure;
     float16 x;
     float16 y;
-    float16 angle;
+    float16 z;
+    float16 angleHorizontal;
+    float16 angleVertical;
   };
 
   public:
     HistoriqueDesPositions();
     ~HistoriqueDesPositions();
 
-    void ajouter(sint32 heure, float16 x, float16 y, float16 angle);
-    bool8 calculer(sint32 heure, float16* x, float16* y, float16* angle);
+    void ajouter(sint32 heure, float16 x, float16 y, float16 z, float16 angleHorizontal, float16 angleVertical);
+    bool8 calculer(sint32 heure, float16* x, float16* y, float16* angleHorizontal);
 
     void afficher();
 

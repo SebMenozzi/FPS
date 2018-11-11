@@ -18,7 +18,7 @@ ServeurUDP::ServeurUDP(uint16 portEcoute)
     reseauInitialise = TRUE;
   }
 
-  printf("Creation du ServeurUDP...\n");
+  printf(">> Creation du ServeurUDP...\n");
 
   // Socket
   this->socketUdp = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -40,11 +40,11 @@ ServeurUDP::ServeurUDP(uint16 portEcoute)
   // Ligature
   if (-1 == bind(this->socketUdp, (SOCKADDR*)&this->adresse_udp, sizeof(this->adresse_udp)))
   {
-    printf("Erreur lors de la creation du ServeurUDP\n");
+    printf(">> Erreur lors de la creation du ServeurUDP\n");
     return;
   }
 
-  printf("ServeurUDP cree avec succes\n");
+  printf(">> ServeurUDP cree avec succes\n");
 }
 
 std::string ServeurUDP::recevoir(std::string* ipExpediteur, uint16* portExpediteur)
@@ -85,6 +85,6 @@ void ServeurUDP::envoyer(std::string message, std::string ipDestinataire, uint16
   // Envoi
   if(-1 == sendto(this->socketUdp, message.c_str(), message.length() + 1, 0, (sockaddr*)&adresseDestinataire, sizeof(adresseDestinataire)))
   {
-    printf("Erreur lors de l'envoi du message\n");
+    printf(">> Erreur lors de l'envoi du message\n");
   }
 }

@@ -13,7 +13,11 @@
 #include "gui/etiquette.h"
 #include <iomanip>
 #include <cmath>
-//#include <iostream>
+#include <stdio.h>
+#include <iostream>
+
+#define VITESSE_DEPLACEMENT (10.0f)
+#define DUREE_ENTRE_SNAPSHOT 50
 
 Scene::Scene(SDL_Window* fenetre)
 {
@@ -22,14 +26,13 @@ Scene::Scene(SDL_Window* fenetre)
   this->clientUDP = NULL;
   this->skybox = NULL;
   this->carte = NULL;
+  this->heightmap = NULL;
   this->police = NULL;
   this->overlay = NULL;
   this->viseur = NULL;
   this->fontProchaineApparition = NULL;
   this->fondTableauScores = NULL;
   this->etiquetteProchaineApparition = NULL;
-  this->etiquetteTempsRestant = NULL;
-
   this->fenetre = fenetre;
   this->largeurFenetre = 0;
   this->hauteurFenetre = 0;
@@ -41,13 +44,10 @@ Scene::Scene(SDL_Window* fenetre)
   // Recuperation des dimentions de la fenetre
   SDL_GetWindowSize(fenetre, &this->largeurFenetre, &this->hauteurFenetre);
 
-
   // Maintien de la souris dans la fenetre
-  //SDL_WM_GrabInput(SDL_GRAB_ON);
   SDL_SetWindowGrab(this->fenetre, SDL_TRUE);
 
   // La souris est au centre de l'ecran
-  //SDL_WarpMouse( (LARGEUR_FENETRE/2), (HAUTEUR_FENETRE/2) );
   SDL_WarpMouseInWindow(this->fenetre, (this->largeurFenetre / 2), (this->hauteurFenetre / 2));
 
   // La souris est invisible
@@ -55,11 +55,7 @@ Scene::Scene(SDL_Window* fenetre)
 
   this->skybox = new Objet3DStatique("skybox.m3s");
   this->carte = new Carte("carte.bmp");
-  //this->personnage = new Personnage(2, 2, 0, -130, "raphael.m3s");
-
-  // Connexion au serveur
-  //this->clientUDP = new ClientUDP();
-  //this->clientUDP->connect("127.0.0.1", 2712);
+  this->heightmap = new Heightmap("heightmap.bmp");
 
   // Activation du test de profondeur (desactive par le menu)
   glEnable(GL_DEPTH_TEST);
@@ -73,10 +69,6 @@ Scene::Scene(SDL_Window* fenetre)
   // Creation du viseur
   this->viseur = new ImageOverlay(this->fenetre, "viseur.bmp", (this->largeurFenetre / 2), (this->hauteurFenetre / 2));
   this->overlay->ajouter(this->viseur);
-
-  // Etiquette pour afficher le temps restant
-  this->etiquetteTempsRestant = new EtiquetteOverlay(this->fenetre, this->largeurFenetre-100, 50, "1:30");
-  this->overlay->ajouter(this->etiquetteTempsRestant);
 
   // Fond de l'ecran de "prochaine apparition"
   this->fontProchaineApparition = new ImageOverlay(this->fenetre, "prochaine_apparition.bmp", (this->largeurFenetre / 2), (this->hauteurFenetre / 2));
@@ -100,11 +92,11 @@ Scene::~Scene()
   delete this->viseur;
   delete this->fontProchaineApparition;
   delete this->etiquetteProchaineApparition;
-  delete this->etiquetteTempsRestant;
   delete this->fondTableauScores;
 
   delete this->overlay;
 
+  /*
   // Liberation des etiquettes du tableau des scores
   for(uint32 i = 0; i < this->etiquettesScoresPseudo.size(); i++)
   {
@@ -112,6 +104,7 @@ Scene::~Scene()
     delete this->etiquettesScoresEmis[i];
     delete this->etiquettesScoresRecu[i];
   }
+  */
 
   // Liberation de la police
   TTF_CloseFont(police);
@@ -141,14 +134,17 @@ void Scene::executer()
     gererEvenements();
     animer();
 
+    // On affiche dans le titre les positions (pour debug)
     char titre[100] = {0};
-    sprintf(titre, "px=%f py=%f a=%f",
+    sprintf(titre, "x=%f y=%f z=%f aH=%f aV=%f",
       this->personnages[this->numeroJoueur]->lirePositionX(),
       this->personnages[this->numeroJoueur]->lirePositionY(),
-      this->personnages[this->numeroJoueur]->lireAngle()
+      this->personnages[this->numeroJoueur]->lirePositionZ(),
+      this->personnages[this->numeroJoueur]->lireAngleHorizontal(),
+      this->personnages[this->numeroJoueur]->lireAngleVertical()
     );
+    SDL_SetWindowTitle(this->fenetre, titre);
 
-    //SDL_SetWindowTitle(this->fenetre, titre);
     dessiner();
     dessiner2D();
     afficher();
@@ -157,6 +153,7 @@ void Scene::executer()
     this->tempsDernierPas = SDL_GetTicks() - heureDernierPas;
     heureDernierPas += this->tempsDernierPas;
 
+    /*
     // Detection de la fin de la partie
     if (this->heureActuelle >= this->heureFinPartie)
     {
@@ -218,12 +215,55 @@ void Scene::executer()
         this->afficher();
       }
     }
+    */
   }
+  // On se déconnecte
+  this->clientUDP->envoyer("DECONNEXION");
 }
 
 void Scene::animer(void)
 {
-  // Lecture de l'�tat des touches
+  /*
+  if (this->heightmap)
+  {
+    float16 positionX = 0, positionY = 0, positionZ = 0;
+    // Positionne le personnage sur le sol
+    if (this->personnages[this->numeroJoueur]->lirePositionX() < 0) {
+      positionX = 0;
+    }
+    if (this->personnages[this->numeroJoueur]->lirePositionY() < 0) {
+      positionY = 0;
+    }
+
+    if (this->personnages[this->numeroJoueur]->lirePositionX() > this->heightmap->w - 2) {
+      positionX = this->heightmap->w - 2;
+    }
+
+    if (this->personnages[this->numeroJoueur]->lirePositionY() > this->heightmap->h - 1) {
+      positionY = this->heightmap->h - 1;
+    }
+
+    float16 x = this->personnages[this->numeroJoueur]->lirePositionX();
+    float16 y = this->personnages[this->numeroJoueur]->lirePositionY();
+    float16 a = (((float16) (getpixel(this->heightmap, x, y) & 0xff)) / this->atenuation);
+    float16 b = (((float16) (getpixel(this->heightmap, x + 1, y )& 0xff)) / this->atenuation);
+    float16 c = (((float16) (getpixel(this->heightmap, x, y + 1) & 0xff)) / this->atenuation);
+    float16 d = (((float16) (getpixel(this->heightmap, x + 1, y + 1) & 0xff)) / this->atenuation);
+    float16 e = a + (b - a) * (x - (uint32) x);
+    float16 f = c + (d - c) * (x - (uint32) x);
+    float16 g = e + (f - e) * (y - (uint32) y);
+
+    positionZ = g;
+
+    this->personnages[numeroJoueur]->positionner(
+      positionX,
+      positionY,
+      positionZ
+    );
+  }
+  */
+
+  // Lecture de l'etat des touches
   int nombreDeTouches;
   const Uint8* pTouches = SDL_GetKeyboardState(&nombreDeTouches);
   Uint8* touches = new Uint8[nombreDeTouches];
@@ -250,11 +290,12 @@ void Scene::animer(void)
     deplacement = TRUE;
 
     // En diagonale
-    if (touches[SDL_GetScancodeFromKey(SDLK_q)]) direction = 45.0;
-    else if (touches[SDL_GetScancodeFromKey(SDLK_d)]) direction = -45.0;
-
-    // Droit
-    else direction = 0.0;
+    if (touches[SDL_GetScancodeFromKey(SDLK_q)])
+      direction = 45.0;
+    else if (touches[SDL_GetScancodeFromKey(SDLK_d)])
+      direction = -45.0;
+    else
+      direction = 0.0; // Droit
   }
   else if (touches[SDL_GetScancodeFromKey(SDLK_s)]) // Touche S
   {
@@ -262,11 +303,12 @@ void Scene::animer(void)
     deplacement = TRUE;
 
     // En diagonale
-    if (touches[SDL_GetScancodeFromKey(SDLK_q)]) direction = 135.0;
-    else if (touches[SDL_GetScancodeFromKey(SDLK_d)]) direction = -135.0;
-
-    // Droit
-    else direction = 180.0;
+    if (touches[SDL_GetScancodeFromKey(SDLK_q)])
+      direction = 135.0;
+    else if (touches[SDL_GetScancodeFromKey(SDLK_d)])
+      direction = -135.0;
+    else
+      direction = 180.0; // Droit
   }
   if(FALSE == deplacement)
   {
@@ -284,8 +326,18 @@ void Scene::animer(void)
     }
   }
 
+  if (touches[SDL_GetScancodeFromKey(SDLK_UP)])
+  {
+    this->personnages[this->numeroJoueur]->goUp();
+  }
+  else if (touches[SDL_GetScancodeFromKey(SDLK_DOWN)])
+  {
+    this->personnages[this->numeroJoueur]->goDown();
+  }
+
   delete[] touches;
 
+  /*
   // Si on est en mode reapparition
   if (this->personnages[this->numeroJoueur]->heureReapparition() > this->heureActuelle)
   {
@@ -294,10 +346,10 @@ void Scene::animer(void)
     this->etiquetteProchaineApparition->rendreVisible();
 
     // Mise a jour du message de reapparition
-    std::stringstream flux;
+    std::stringstream message;
     sint32 secondesRestantes = (this->personnages[this->numeroJoueur]->heureReapparition() - this->heureActuelle) / 1000;
-    flux << "Prochaine apparition sur sc�ne dans " << secondesRestantes << " seconde" << ( (secondesRestantes >= 2)? "s" : "") << ".";
-    this->etiquetteProchaineApparition->modifierTexte(flux.str());
+    message << "Prochaine apparition dans " << secondesRestantes << " seconde" << ((secondesRestantes >= 2) ? "s" : "") << ".";
+    this->etiquetteProchaineApparition->modifierTexte(message.str());
   }
   else // Pas en mode "reapparition"
   {
@@ -305,71 +357,113 @@ void Scene::animer(void)
     this->fontProchaineApparition->rendreInvisible();
     this->etiquetteProchaineApparition->rendreInvisible();
   }
+  */
 
   // Si un deplacement est demande et qu'on n'est pas en mode "reapparition"
   // TODO : Un mort ne doit pas pouvoir tirer avant l'heure de sa reaparition
-  if (deplacement && this->personnages[this->numeroJoueur]->heureReapparition() < this->heureActuelle)
+  if (deplacement/* && this->personnages[this->numeroJoueur]->heureReapparition() < this->heureActuelle*/)
   {
-    #define VITESSE_DEPLACEMENT (5.0f)
-
     // Calcule de la distance a parcourir
-    float16 distance = (float)tempsDernierPas * VITESSE_DEPLACEMENT / 1000.0f;
+    float16 distance = (float) tempsDernierPas * VITESSE_DEPLACEMENT / 1000.0f;
 
-    // Calcule des segments de deplacement
-    #define TAILLE_GRAND_SEGMENT (0.25f)
-    uint32 nbGrandsSegments = (uint32)(distance / TAILLE_GRAND_SEGMENT);
-    float16 taillePetitSegment = fmod(distance, TAILLE_GRAND_SEGMENT);
+    /*
+    // EN GERANT LES LAGS
 
-    // Pour chaque grand segment
-    for(uint32 i = 0; i < nbGrandsSegments; i++)
+    // On découpe la distance en petit bout de distance
+    #define TAILLE_MINI_DISTANCE (0.25f)
+
+    uint32 nbSegments = (uint32)(distance / TAILLE_MINI_DISTANCE);
+    float16 distanceRestante = fmod(distance, TAILLE_MINI_DISTANCE);
+
+    // Pour chaque segment
+    for(uint32 i = 0; i < nbSegments; i++)
     {
       // Recuperation de l'environnement
-      sint32 positionCarteX = 0, positionCarteY = 0;
+      sint32 positionCarteX = 0, positionCarteY = 0, positionCarteZ = 0;
+      this->personnages[this->numeroJoueur]->positionSurLaCarte(&positionCarteX, &positionCarteY, &positionCarteZ);
+
       bool8 entouragePersonnage[8] = {0};
-      this->personnages[this->numeroJoueur]->positionSurLaCarte(&positionCarteX, &positionCarteY);
       this->carte->entourage(positionCarteX, positionCarteY, entouragePersonnage);
 
       // Deplacement du personnage dans la direction demande
-      this->personnages[this->numeroJoueur]->deplacer(TAILLE_GRAND_SEGMENT, direction, entouragePersonnage);
+      this->personnages[this->numeroJoueur]->deplacer(TAILLE_MINI_DISTANCE, direction, entouragePersonnage);
     }
 
-    // Pour le petit segment
+    // Pour la distance restante
 
     // Recuperation de l'environnement
-    sint32 positionCarteX = 0, positionCarteY = 0;
+    sint32 positionCarteX = 0, positionCarteY = 0, positionCarteZ = 0;
+    this->personnages[this->numeroJoueur]->positionSurLaCarte(&positionCarteX, &positionCarteY, &positionCarteZ);
+
     bool8 entouragePersonnage[8] = {0};
-    this->personnages[this->numeroJoueur]->positionSurLaCarte(&positionCarteX, &positionCarteY);
     this->carte->entourage(positionCarteX, positionCarteY, entouragePersonnage);
 
     // Deplacement du personnage dans la direction demande
-    this->personnages[this->numeroJoueur]->deplacer(taillePetitSegment, direction, entouragePersonnage);
+    this->personnages[this->numeroJoueur]->deplacer(distanceRestante, direction, entouragePersonnage);
+    */
+
+    // SANS GERER LES LAGS
+
+    float16 positionCarteX = 0, positionCarteY = 0, positionCarteZ = 0;
+    this->personnages[this->numeroJoueur]->positionSurLaCarte(&positionCarteX, &positionCarteY, &positionCarteZ);
+
+    bool8 entouragePersonnage[8] = {0};
+    this->carte->entourage(positionCarteX, positionCarteY, entouragePersonnage);
+
+    float16 hauteurHeightmap = this->heightmap->lireHauteur(positionCarteX, positionCarteY);
+
+    this->personnages[this->numeroJoueur]->deplacer(distance, direction, entouragePersonnage, hauteurHeightmap);
   }
 
-  // Mise a jour du texte affiche pour le temps restant
-  uint32 tempsRestantEnSecondes = (this->heureFinPartie - this->heureActuelle) / 1000;
-  uint32 minutesRestantes = tempsRestantEnSecondes / 60;
-  uint32 secondesRestantes = tempsRestantEnSecondes % 60;
-  std::stringstream flux;
-  flux << std::setfill('0') << std::setw(2) << minutesRestantes << ":" << std::setfill('0') << std::setw(2) << secondesRestantes;
-  this->etiquetteTempsRestant->modifierTexte(flux.str());
-
-  #define DUREE_ENTRE_SNAPSHOT 50
   // Envoi de la position au serveur toutes les 50 ms en moyenne
   static sint32 heureDernierEnvoi = this->heureActuelle - DUREE_ENTRE_SNAPSHOT;
+
   if (this->heureActuelle >= heureDernierEnvoi + DUREE_ENTRE_SNAPSHOT)
   {
     heureDernierEnvoi = this->heureActuelle;
 
     std::stringstream message;
-    message << "POSITION_JOUEUR " << this->heureActuelle << " " << this->personnages[this->numeroJoueur]->lirePositionX() << " " << this->personnages[this->numeroJoueur]->lirePositionY() << " " << this->personnages[this->numeroJoueur]->lireAngle();
-    texteAAfficher = message.str();
-    this->clientUDP->envoyer( message.str() );
+
+    message << "POSITION_JOUEUR ";
+    message << this->heureActuelle << " ";
+    message << this->personnages[this->numeroJoueur]->lirePositionX() << " "; // composante x
+    message << this->personnages[this->numeroJoueur]->lirePositionY() << " "; // composante y
+    message << this->personnages[this->numeroJoueur]->lirePositionZ() << " "; // composante z
+    message << this->personnages[this->numeroJoueur]->lireAngleHorizontal() << " "; // angle horizontal
+    message << this->personnages[this->numeroJoueur]->lireAngleVertical() << " "; // angle horizontal
+
+    this->clientUDP->envoyer(message.str());
   }
 
-  // Reception d'un snapshot
+
+  // Si on recoit un message
   std::string message = this->clientUDP->recevoir();
   std::string entete = decapsuler(&message);
-  if (entete == "SNAPSHOT")
+
+  if (entete == "POSITION_JOUEUR")
+  {
+    std::cout << "RECOIS LA POSITION" << std::endl;
+
+    sint32 heure = stringEnSint32(decapsuler(&message));
+    float16 positionX = stringEnFloat16(decapsuler(&message));
+    float16 positionY = stringEnFloat16(decapsuler(&message));
+    float16 positionZ = stringEnFloat16(decapsuler(&message));
+    float16 angleHorizontal = stringEnFloat16(decapsuler(&message));
+    float16 angleVertical = stringEnFloat16(decapsuler(&message));
+
+    /*
+    this->personnages[numeroJoueur]->positionner(
+      positionX,
+      positionY,
+      positionZ
+    );
+
+    this->personnages[numeroJoueur]->orienter(angleHorizontal, angleVertical);
+    */
+  }
+  /*
+  // Reception d'un snapshot
+  else if (entete == "SNAPSHOT")
   {
     sint32 heure = stringEnSint32(decapsuler(&message));
 
@@ -378,10 +472,20 @@ void Scene::animer(void)
     {
       float16 positionX = stringEnFloat16(decapsuler(&message));
       float16 positionY = stringEnFloat16(decapsuler(&message));
-      float16 angle = stringEnFloat16(decapsuler(&message));
-      this->personnages[i]->ajouterPosition(heure, positionX, positionY, angle);
+      float16 positionZ = stringEnFloat16(decapsuler(&message));
+      float16 angleHorizontal = stringEnFloat16(decapsuler(&message));
+
+      this->personnages[i]->ajouterPosition(
+        heure,
+        positionX,
+        positionY,
+        positionZ,
+        angleHorizontal,
+        0
+      );
     }
   }
+  */
   else if (entete == "REAPPARITION")
   {
     // Lecture du message de reapparition
@@ -389,29 +493,42 @@ void Scene::animer(void)
     sint32 heureReapparition = stringEnSint32(decapsuler(&message));
     sint32 positionXReapparition = stringEnSint32(decapsuler(&message));
     sint32 positionYReapparition = stringEnSint32(decapsuler(&message));
-    float16 angleReapparition = stringEnFloat16(decapsuler(&message));
+    sint32 positionZReapparition = stringEnSint32(decapsuler(&message));
+    float16 angleHorizontalReapparition = stringEnFloat16(decapsuler(&message));
 
     // Ajout du point de reapparition a l'historique du personnage (deux fois pour eviter l'extrapolation au moment de la reapparition)
     // 100 ms plus tot car on affiche ce qu'il y avait dans l'historique 100 ms plus tot
-    this->personnages[numeroDuJoueur]->ajouterPosition(heureReapparition-101, positionXReapparition + 0.5, positionYReapparition + 0.5, angleReapparition);
-    this->personnages[numeroDuJoueur]->ajouterPosition(heureReapparition-100, positionXReapparition + 0.5, positionYReapparition + 0.5, angleReapparition);
+    this->personnages[numeroDuJoueur]->ajouterPosition(
+      heureReapparition - 101,
+      positionXReapparition + 0.5,
+      positionYReapparition + 0.5,
+      positionZReapparition + 0.5,
+      angleHorizontalReapparition,
+      0
+    );
+
+    this->personnages[numeroDuJoueur]->ajouterPosition(
+      heureReapparition - 100,
+      positionXReapparition + 0.5,
+      positionYReapparition + 0.5,
+      positionZReapparition + 0.5,
+      angleHorizontalReapparition,
+      0
+    );
 
     // Passe le personnage en mode "reapparition"
     this->personnages[numeroDuJoueur]->heureReapparition(heureReapparition);
-    Point pointReapparition = {positionXReapparition, positionYReapparition};
-    //this->personnages[numeroDuJoueur]->pointReapparition(pointReapparition);
-    //this->personnages[numeroDuJoueur]->angleReapparition(angleReapparition);
+    Point3Float pointReapparition = { positionXReapparition, positionYReapparition, positionZReapparition };
 
     // Si c'est notre personnage qui est en mode reapparition
     if (this->numeroJoueur == numeroDuJoueur)
     {
-        // Repositionne notre personnage au point impose
-        this->personnages[numeroDuJoueur]->positionner(pointReapparition.x + 0.5, pointReapparition.y + 0.5);
-        this->personnages[numeroDuJoueur]->orienter(angleReapparition);
+      // Repositionne notre personnage au point impose
+      this->personnages[numeroDuJoueur]->positionner(pointReapparition.x + 0.5, pointReapparition.y + 0.5, pointReapparition.z + 0.5);
+      this->personnages[numeroDuJoueur]->orienter(angleHorizontalReapparition, 0);
     }
 
     //this->personnages[numeroDuJoueur]->afficherHistorique();
-
     // TODO : ATTENTION : penser a interdire de tuer un joueur en mode "reapparition"
   }
 
@@ -428,17 +545,17 @@ void Scene::animer(void)
 
 void Scene::dessiner(void)
 {
-  //glEnable( GL_CULL_FACE ); // Activer le masquage des faces cach�es
-  glCullFace(GL_BACK); // Face cach�es = faces arri�res
+  //glEnable( GL_CULL_FACE ); // Activer le masquage des faces cachees
+  glCullFace(GL_BACK); // Face cachees = faces arrieres
   glFrontFace(GL_CCW); // Face avant = sens trigo
 
   // Couleur rgba de vidage de l'ecran
   glClearColor(0.0, 0.0, 0.0, 0.0);
 
-  // D�finition de la fenetre
+  // Definition de la fenetre
   glViewport(0, 0, this->largeurFenetre, this->hauteurFenetre);
 
-  // D�finition de la zone visible
+  // Definition de la zone visible
   glLoadIdentity();
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -450,13 +567,12 @@ void Scene::dessiner(void)
   glColor3f(1.0, 1.0, 1.0);
 
   // Vidage de l'ecran
-  glClear(/*GL_COLOR_BUFFER_BIT |*/ GL_DEPTH_BUFFER_BIT);
+  glClear(GL_DEPTH_BUFFER_BIT);
 
   // Place la camera
-  glMatrixMode( GL_MODELVIEW );
+  glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
-  //gluLookAt(1,2,4,2,3,0.7,0,0,1);
   this->personnages[this->numeroJoueur]->regarder();
 
   // Dessin de la skybox
@@ -465,15 +581,17 @@ void Scene::dessiner(void)
   // Dessin de la skybox
   this->carte->dessiner();
 
+  // Dessin de la heightmap
+  this->heightmap->dessiner();
+
   // Dessin des autres personnages
   for(uint32 i = 0; i < this->personnages.size(); i++)
   {
     if (i != this->numeroJoueur)
     {
       // TODO : Ne pas afficher les personnages en reapparition, idem pour le test du tir cote serveur
-
       // Si le personnage n'est plus en mode "reapparition"
-      if ( this->heureActuelle > this->personnages[i]->heureReapparition() )
+      if (this->heureActuelle > this->personnages[i]->heureReapparition())
       {
         this->personnages[i]->dessiner();
       }
@@ -501,12 +619,12 @@ void Scene::gererEvenements(void)
 
         case SDL_MOUSEMOTION:
           // Tourne le personnage selon le deplacement de la souris
-          this->personnages[this->numeroJoueur]->tournerHorizontalement(-evenement.motion.xrel*0.06);
-          this->personnages[this->numeroJoueur]->tournerVerticalement(-evenement.motion.yrel*0.06);
+          this->personnages[this->numeroJoueur]->tournerHorizontalement(-evenement.motion.xrel * 0.06);
+          this->personnages[this->numeroJoueur]->tournerVerticalement(-evenement.motion.yrel * 0.06);
 
           // Si la souris s'ecarte de plus de 10 px du centre de la fenetre
-          if ( abs( evenement.motion.x - (this->largeurFenetre/2) ) > 10
-            || abs( evenement.motion.y - (this->hauteurFenetre/2) ) > 10)
+          if ( abs(evenement.motion.x - (this->largeurFenetre / 2)) > 10
+            || abs(evenement.motion.y - (this->hauteurFenetre / 2)) > 10)
           {
             // Desactive les evenements de type SDL_MOUSEMOTION
             SDL_EventState(SDL_MOUSEMOTION,SDL_DISABLE);
@@ -529,7 +647,6 @@ void Scene::gererEvenements(void)
           // S'il s'agit d'un enfoncement reel (pas par repetition de touche)
           if (evenement.key.repeat == 0)
           {
-            printf("SDL_KEYDOWN\n");
             // Permet de quitter grace a la touche Echap
             if (evenement.key.keysym.sym == SDLK_ESCAPE)
             {
@@ -543,7 +660,7 @@ void Scene::gererEvenements(void)
           {
             std::stringstream message;
             message << "TIR " << sint32EnString(this->heureActuelle);
-            this->clientUDP->envoyer( message.str() );
+            this->clientUDP->envoyer(message.str());
           }
           break;
       }
@@ -552,12 +669,6 @@ void Scene::gererEvenements(void)
 
       if (i >= 100) break; // Test de deblocage
   }
-
-  // Replace la souris au centre
-  //SDL_EventState(SDL_MOUSEMOTION, SDL_DISABLE);
-  //SDL_WarpMouseInWindow(this->fenetre, (this->largeurFenetre/2), (this->hauteurFenetre/2));
-  //SDL_EventState(SDL_MOUSEMOTION, SDL_DISABLE);
-  //SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
 }
 
 void Scene::clientUDPAUtiliser(ClientUDP* clientUDP)
@@ -570,21 +681,20 @@ void Scene::reglerHorloge(sint32 heure)
   this->horloge.regler(heure);
 }
 
-void Scene::creerPersonnages(uint32 nbJoueurs)
+void Scene::creerPersonnage()
 {
   // Lecture de l'heure actuelle pour determiner l'heure de la premiere apparition
   sint32 heureActuelle = this->horloge.heure();
 
-  // Pour chaque joueur
-  for(uint32 i = 0; i < nbJoueurs; i++)
-  {
-    // Creation du personnage
-    this->personnages.push_back(new Personnage(2, 2, 0, -130, "raphael.m3s"));
+  this->clientUDP->envoyer("DEMANDE_POSITION_JOUEUR");
 
-    // Le personnage est immediatement plonge dans le mode "reapparition"
-    // pendant 5 secondes, le temps d'obtenir les ordres du serveur
-    this->personnages[i]->heureReapparition(heureActuelle+5000);
-  }
+  // Ajout de notre personnage (position temporaire si le joueur s'est deja connecte)
+  this->personnages.push_back(new Personnage(40.0, 40.0, 0.55, -45.0, 0, 0.3, "raphael.m3s"));
+
+  // Le personnage est immediatement plonge dans le mode "reapparition"
+  // pendant 5 secondes, le temps d'obtenir des reponses du serveur (position réelle du personnage, la map...)
+
+  //this->personnages[this->numeroJoueur]->heureReapparition(heureActuelle + 5000);
 }
 
 void Scene::reglerNumeroJoueur(uint32 numeroJoueur)
@@ -601,23 +711,23 @@ void Scene::dessiner2D(void)
 
   // Definition de la fenetre
   glLoadIdentity();
-  gluOrtho2D(0.0, (GLdouble)this->largeurFenetre, 0.0, (GLdouble)this->hauteurFenetre);
+  gluOrtho2D(0.0, (GLdouble) this->largeurFenetre, 0.0, (GLdouble) this->hauteurFenetre);
 
   // Desactivation du test de profondeur
   glDisable(GL_DEPTH_TEST);
 
-
   this->overlay->dessiner();
-
 
   glColor3f(1.0, 1.0, 1.0);
 }
 
+/*
 void Scene::reglerHeureFinPartie(sint32 heureFin)
 {
   this->heureFinPartie = heureFin;
 }
-
+*/
+/*
 void Scene::creerTableauScores(uint32 nbJoueurs)
 {
   // Pour chaque joueur
@@ -639,7 +749,8 @@ void Scene::creerTableauScores(uint32 nbJoueurs)
     this->overlay->ajouter(this->etiquettesScoresRecu[i]);
   }
 }
-
+*/
+/*
 void Scene::reglerPseudosJoueurs(std::vector<std::string> listePseudosJoueurs)
 {
   // Pour chaque joueur
@@ -649,3 +760,4 @@ void Scene::reglerPseudosJoueurs(std::vector<std::string> listePseudosJoueurs)
     this->personnages[i]->pseudo(listePseudosJoueurs[i]);
   }
 }
+*/

@@ -14,8 +14,7 @@ HistoriqueDesPositions::~HistoriqueDesPositions()
 
 }
 
-
-void HistoriqueDesPositions::ajouter(sint32 heure, float16 x, float16 y, float16 angle)
+void HistoriqueDesPositions::ajouter(sint32 heure, float16 x, float16 y, float16 z, float16 angleHorizontal, float16 angleVertical)
 {
   // Si la position a ajouter est plus recente que la derniere position ajoutee
   std::vector<HistoriqueDesPositions::Position>::iterator position = positions.end();
@@ -27,14 +26,16 @@ void HistoriqueDesPositions::ajouter(sint32 heure, float16 x, float16 y, float16
     position.heure = heure;
     position.x = x;
     position.y = y;
-    position.angle = angle;
+    position.z = z;
+    position.angleHorizontal = angleHorizontal;
+    position.angleVertical = angleVertical;
 
     // Ajout de la position a la liste
     this->positions.push_back(position);
   }
 }
 
-bool8 HistoriqueDesPositions::calculer(sint32 heure, float16* x, float16* y, float16* angle)
+bool8 HistoriqueDesPositions::calculer(sint32 heure, float16* x, float16* y, float16* angleHorizontal)
 {
   uint32 dernierePosition = this->positions.size() - 1;
 
@@ -48,7 +49,7 @@ bool8 HistoriqueDesPositions::calculer(sint32 heure, float16* x, float16* y, flo
     // Retourne la position connue quelque soit l'heure
     *x = this->positions[0].x;
     *y = this->positions[0].y;
-    *angle = this->positions[0].angle;
+    *angleHorizontal = this->positions[0].angleHorizontal;
 
     return TRUE;
   }
@@ -60,7 +61,7 @@ bool8 HistoriqueDesPositions::calculer(sint32 heure, float16* x, float16* y, flo
       // Retourne la premiere position connue
       *x = this->positions[0].x;
       *y = this->positions[0].y;
-      *angle = this->positions[0].angle;
+      *angleHorizontal = this->positions[0].angleHorizontal;
 
       return TRUE;
     }
@@ -85,36 +86,36 @@ bool8 HistoriqueDesPositions::calculer(sint32 heure, float16* x, float16* y, flo
                (this->positions[i+1].heure-this->positions[i].heure);
 
           // Calcule de l'angle interpolee, loin de +/-180 degres
-          if (this->positions[i+1].angle - this->positions[i].angle > -180 && this->positions[i+1].angle - this->positions[i].angle < 180)
+          if (this->positions[i+1].angleHorizontal - this->positions[i].angleHorizontal > -180 && this->positions[i+1].angleHorizontal - this->positions[i].angleHorizontal < 180)
           {
-            *angle = this->positions[i].angle +
-                     (this->positions[i+1].angle - this->positions[i].angle) *
+            *angleHorizontal = this->positions[i].angleHorizontal +
+                     (this->positions[i+1].angleHorizontal - this->positions[i].angleHorizontal) *
                      (heure-this->positions[i].heure) /
                      (this->positions[i+1].heure-this->positions[i].heure);
           }
-          else if (this->positions[i+1].angle - this->positions[i].angle >= 180) // Au voisinage de +/-180 degres, vers la gauche
+          else if (this->positions[i+1].angleHorizontal - this->positions[i].angleHorizontal >= 180) // Au voisinage de +/-180 degres, vers la gauche
           {
-            *angle = this->positions[i].angle +
-                    ((this->positions[i+1].angle-360) - this->positions[i].angle) *
+            *angleHorizontal = this->positions[i].angleHorizontal +
+                    ((this->positions[i+1].angleHorizontal - 360) - this->positions[i].angleHorizontal) *
                     (heure-this->positions[i].heure) /
                     (this->positions[i+1].heure-this->positions[i].heure);
           }
-          else if (this->positions[i+1].angle - this->positions[i].angle <= -180) // Au voisinage de +/-180 degres, vers la droite
+          else if (this->positions[i+1].angleHorizontal - this->positions[i].angleHorizontal <= -180) // Au voisinage de +/-180 degres, vers la droite
           {
-            *angle = this->positions[i].angle +
-                     ((this->positions[i+1].angle+360) - this->positions[i].angle) *
+            *angleHorizontal = this->positions[i].angleHorizontal +
+                     ((this->positions[i+1].angleHorizontal + 360) - this->positions[i].angleHorizontal) *
                      (heure-this->positions[i].heure) /
                      (this->positions[i+1].heure-this->positions[i].heure);
           }
 
-          // Bridage de l'angle dans l'intervale [-180;180[
-          if (*angle >= 180.0)
+          // Bridage de l'angle horizontal dans l'intervale [-180;180[
+          if (*angleHorizontal >= 180.0)
           {
-            *angle -= 360;
+            *angleHorizontal -= 360;
           }
-          else if (*angle < -180.0)
+          else if (*angleHorizontal < -180.0)
           {
-            *angle += 360;
+            *angleHorizontal += 360;
           }
           return TRUE;
         }
@@ -139,18 +140,18 @@ bool8 HistoriqueDesPositions::calculer(sint32 heure, float16* x, float16* y, flo
            ( (this->positions[dernierePosition].y - this->positions[dernierePosition-1].y) / (this->positions[dernierePosition].heure - this->positions[dernierePosition-1].heure) ) *
            (heure - this->positions[dernierePosition].heure);
 
-      // Extrapolation de l'angle
-      *angle = this->positions[dernierePosition].angle +
-               ( (this->positions[dernierePosition].angle - this->positions[dernierePosition-1].angle) / (this->positions[dernierePosition].heure - this->positions[dernierePosition-1].heure) ) *
+      // Extrapolation de l'angle horizontal
+      *angleHorizontal = this->positions[dernierePosition].angleHorizontal +
+               ( (this->positions[dernierePosition].angleHorizontal - this->positions[dernierePosition-1].angleHorizontal) / (this->positions[dernierePosition].heure - this->positions[dernierePosition-1].heure) ) *
                (heure - this->positions[dernierePosition].heure);
 
-      if (*angle >= 180)
+      if (*angleHorizontal >= 180)
       {
-        *angle -= 360;
+        *angleHorizontal -= 360;
       }
-      else if (*angle < -180)
+      else if (*angleHorizontal < -180)
       {
-        *angle += 360;
+        *angleHorizontal += 360;
       }
       return TRUE;
     }
@@ -165,7 +166,12 @@ void HistoriqueDesPositions::afficher()
   // Parcours la liste des positions
   for (std::vector<HistoriqueDesPositions::Position>::iterator position = positions.begin(); position != positions.end();  )
   {
-    std::cout << position->heure << "\t" <<position->x << "\t" << position->y << "\t" << position->angle << std::endl;
+    std::cout << position->heure << "\t";
+    std::cout << position->x << "\t";
+    std::cout << position->y << "\t";
+    std::cout << position->angleHorizontal << "\t";
+    std::cout << position->angleVertical << std::endl;
+
     position++; // Passage a la position suivante
   }
 

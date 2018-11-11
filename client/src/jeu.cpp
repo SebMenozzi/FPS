@@ -20,6 +20,9 @@
 #include "fonctionsUtiles.h"
 #include "fichierINI.h"
 
+// Toute les secondes
+#define DUREE_ENTRE_DEMANDE_JOUEURS 1000
+
 Jeu::Jeu(void)
 {
   // Initialisation des attributs
@@ -43,7 +46,6 @@ Jeu::~Jeu(void)
   SDL_Quit();
 }
 
-
 // NOTE : Pour savoir ce qu'il faut mettre ici ou dans le constructeur, il faut
 // se dire que le jeu peut etre execute plusieurs fois a partir de la meme instance
 // Prevoir la posibilite de recharger la configuration du jeu en cas de modification
@@ -66,247 +68,200 @@ bool8 Jeu::executer(void)
     return FALSE;
   }
 
-  Menu menuConnexion(this->fenetre, "fond_menu.bmp");
+  // Creation du menu principal
+  Menu menuPrincipal(this->fenetre, "fond_menu.bmp");
 
   Etiquette etiquetteServeur(this->fenetre, this->largeurFenetre/2, 50, "Serveur :");
-  menuConnexion.ajouter(&etiquetteServeur);
+  menuPrincipal.ajouter(&etiquetteServeur);
 
   ZoneTexte zoneTexteServeur(this->fenetre, this->largeurFenetre/2, 90);
   zoneTexteServeur.modifierTexte(fichierIniJeu.lire("serveur"));
-  menuConnexion.ajouter(&zoneTexteServeur);
+  menuPrincipal.ajouter(&zoneTexteServeur);
 
   Etiquette etiquettePseudo(this->fenetre, this->largeurFenetre/2, 150, "Pseudo :");
-  menuConnexion.ajouter(&etiquettePseudo);
+  menuPrincipal.ajouter(&etiquettePseudo);
 
   ZoneTexte zoneTextePseudo(this->fenetre, this->largeurFenetre / 2, 190);
   zoneTextePseudo.modifierTexte(fichierIniJeu.lire("pseudo"));
-  menuConnexion.ajouter(&zoneTextePseudo);
+  menuPrincipal.ajouter(&zoneTextePseudo);
 
   Etiquette etiquettePleinEcran(this->fenetre, (this->largeurFenetre / 2) - 30, 250, "Plein ecran :");
-  menuConnexion.ajouter(&etiquettePleinEcran);
+  menuPrincipal.ajouter(&etiquettePleinEcran);
 
   CaseACocher casePleinEcran((this->largeurFenetre / 2) + 70, 250, (fichierIniJeu.lire("pleinEcran") == "1") ? TRUE : FALSE);
-  bool8 peCoche = (fichierIniJeu.lire("pleinEcran") == "1") ? TRUE : FALSE;
-  menuConnexion.ajouter(&casePleinEcran);
+  bool8 pleinEcranCoche = (fichierIniJeu.lire("pleinEcran") == "1") ? TRUE : FALSE;
+  menuPrincipal.ajouter(&casePleinEcran);
 
   Bouton boutonJouer(this->fenetre, this->largeurFenetre / 2, 320, "Jouer");
-  menuConnexion.ajouter(&boutonJouer);
+  menuPrincipal.ajouter(&boutonJouer);
 
   Bouton boutonQuitter(this->fenetre, this->largeurFenetre / 2, 400, "Quitter");
-  menuConnexion.ajouter(&boutonQuitter);
+  menuPrincipal.ajouter(&boutonQuitter);
 
-  menuConnexion.dessiner();
+  menuPrincipal.dessiner();
 
-  while(TRUE)
-  {
+  while (TRUE) {
     // Si la case a change d'etat
-    if (peCoche != casePleinEcran.cochee())
+    if (pleinEcranCoche != casePleinEcran.cochee())
     {
-      peCoche = casePleinEcran.cochee();
+      pleinEcranCoche = casePleinEcran.cochee();
 
       // Met la fenetre dans l'etat demande
-      SDL_SetWindowFullscreen(this->fenetre, (TRUE == peCoche) ? SDL_WINDOW_FULLSCREEN : 0);
+      SDL_SetWindowFullscreen(this->fenetre, (TRUE == pleinEcranCoche) ? SDL_WINDOW_FULLSCREEN : 0);
     }
-
+    // Si on clique sur Quitter
     if (boutonQuitter.clique())
     {
       break;
     }
-
+    // Si on clique sur Jouer
     if (boutonJouer.clique())
     {
-      Menu menuSynchronisation(this->fenetre, "fond_menu.bmp");
+      // Création du menu de Connexion
+      Menu menuConnexion(this->fenetre, "fond_menu.bmp");
 
-      Bouton boutonQuitter(this->fenetre, this->largeurFenetre / 2, 400, "Quitter");
-      menuSynchronisation.ajouter(&boutonQuitter);
+      Etiquette etiquetteNbJoueurs(this->fenetre, this->largeurFenetre / 2, 100, "Nombre de joueurs : 0");
+      menuConnexion.ajouter(&etiquetteNbJoueurs);
 
-      Etiquette etiquetteHorlogeServeur(this->fenetre, this->largeurFenetre / 2, 200, "Horloge : 0");
-      menuSynchronisation.ajouter(&etiquetteHorlogeServeur);
-      etiquetteHorlogeServeur.visible(FALSE);
+      Etiquette etiquettePseudosJoueurs(this->fenetre, this->largeurFenetre / 2, 150, "Liste des joueurs : EN ATTENTE...");
+      menuConnexion.ajouter(&etiquettePseudosJoueurs);
 
-      Etiquette etiquettePseudosJoueurs(this->fenetre, this->largeurFenetre / 2, 300, "Liste des joueurs : ");
-      menuSynchronisation.ajouter(&etiquettePseudosJoueurs);
+      Bouton boutonSeConnecter(this->fenetre, this->largeurFenetre / 2, 320, "Se connecter");
+      menuConnexion.ajouter(&boutonSeConnecter);
 
-      Etiquette etiquetteNbJoueurs(this->fenetre, this->largeurFenetre / 2, 250, "Nombre de joueurs : 0");
-      menuSynchronisation.ajouter(&etiquetteNbJoueurs);
+      Bouton boutonRetour(this->fenetre, this->largeurFenetre / 2, 400, "Retour");
+      menuConnexion.ajouter(&boutonRetour);
 
-      Etiquette partieEnCours(this->fenetre, this->largeurFenetre / 2, 350, "");
-      menuSynchronisation.ajouter(&partieEnCours);
-
+      // On initialise le client UDP
       ClientUDP clientUdp;
       clientUdp.connect(zoneTexteServeur.texte(), 2712);
 
+      // On initalise l'horloge
       Horloge horlogeClient;
       horlogeClient.regler(0);
 
-      sint32 heureProchainsMessages = 0;
-
       Horloge horlogeSynchronisee;
-
-      sint32 heureProchainePartie = 0;
 
       uint32 numeroJoueur = 0;
 
-      uint32 heureFinPartie;
-
       std::vector<std::string> listePseudosJoueurs;
 
-      while(TRUE)
+      // Traitement du pseudo
+      std::string messagePseudo;
+      std::string pseudo = zoneTextePseudo.texte();
+
+      // Si le pseudo n'est pas vide
+      if (pseudo != "")
       {
-        std::string messageRecu = clientUdp.recevoir();
-
-        // Si on a recu un message
-        if(messageRecu != "")
+        // mettre en snake case
+        for(uint32 i = 0; i < pseudo.size(); i++)
         {
-          // Lecture de l'entete
-          std::string entete = decapsuler(&messageRecu);
+          if (pseudo[i] == ' ' || pseudo[i] == '\t')
+            pseudo[i] = '_';
+        }
 
-          if (entete == "REPONSE_HEURE")
+        // On demande la liste des joueurs
+        clientUdp.envoyer("DEMANDE_JOUEURS");
+
+        while(TRUE)
+        {
+
+          /*
+          // On rafraichit la liste des joueurs connectés
+          static sint32 heureDernierEnvoi = horlogeSynchronisee.heure() - DUREE_ENTRE_DEMANDE_JOUEURS;
+
+          if (horlogeSynchronisee.heure() >= heureDernierEnvoi + DUREE_ENTRE_DEMANDE_JOUEURS)
           {
-            // Lecture de l'heure serveur
-            std::string heureDemande = decapsuler(&messageRecu);
-            std::string heureRecu = decapsuler(&messageRecu);
+            heureDernierEnvoi = horlogeSynchronisee.heure();
 
-            // Calcule de l'heure actuelle sur le serveur
-            sint32 heureDeLaDemande = stringEnSint32(heureDemande);
-            sint32 heureReglage = stringEnSint32(heureRecu) + ( (horlogeClient.heure() - heureDeLaDemande) / 2);
-
-            // Reglage de notre horloge synchronisee
-            horlogeSynchronisee.regler(heureReglage);
+            // On demande la liste des joueurs
+            clientUdp.envoyer("DEMANDE_JOUEURS");
           }
+          */
 
-          if (entete == "HEURE_FIN_PROCHAINE_PARTIE")
+          std::string messageRecu = clientUdp.recevoir();
+
+          // Si on a recu un message
+          if(messageRecu != "")
           {
-            // Lecture de la duree de la partie
-            heureFinPartie = stringEnUint32(decapsuler(&messageRecu));
-          }
+            // Lecture de l'entete
+            std::string entete = decapsuler(&messageRecu);
 
-          if (entete == "LISTE_JOUEURS")
-          {
-            etiquettePseudosJoueurs.modifierTexte("Liste des joueurs : " + messageRecu);
-
-            listePseudosJoueurs.clear();
-
-            while(1)
+            if (entete == "REPONSE_HEURE")
             {
-              std::string pseudo = decapsuler(&messageRecu);
-              if (pseudo == "")
+              // Lecture de l'heure serveur
+              std::string heureDemande = decapsuler(&messageRecu);
+              std::string heureRecu = decapsuler(&messageRecu);
+
+              // Calcule de l'heure actuelle sur le serveur
+              sint32 heureDeLaDemande = stringEnSint32(heureDemande);
+              sint32 heureReglage = stringEnSint32(heureRecu) + ((horlogeClient.heure() - heureDeLaDemande) / 2);
+
+              // Reglage de notre horloge synchronisee
+              horlogeSynchronisee.regler(heureReglage);
+            }
+
+            if (entete == "LISTE_JOUEURS")
+            {
+              etiquettePseudosJoueurs.modifierTexte("Liste des joueurs : " + messageRecu);
+
+              listePseudosJoueurs.clear();
+
+              while(TRUE)
               {
-                break;
+                std::string pseudo = decapsuler(&messageRecu);
+                if (pseudo == "")
+                {
+                  break;
+                }
+                listePseudosJoueurs.push_back(pseudo);
               }
 
-              //nbJoueurs++;
-              listePseudosJoueurs.push_back(pseudo);
-            }
-
-            etiquetteNbJoueurs.modifierTexte("Nombre de joueurs : " + sint32EnString(listePseudosJoueurs.size()));
-          }
-
-          if (entete == "HEURE_PROCHAINE_PARTIE")
-          {
-            // Memorisation de l'heure de la prochaine partie
-            heureProchainePartie = stringEnSint32(decapsuler(&messageRecu));
-          }
-
-          if (entete == "NUMERO_JOUEUR")
-          {
-            // Memorisation du numero de joueur
-            numeroJoueur = stringEnSint32(decapsuler(&messageRecu));
-
-            // On est inscrit, partie en cours doit etre effacee
-            partieEnCours.modifierTexte("");
-          }
-
-          // Si une partie est en cours sur ce serveur
-          if (entete == "PARTIE_EN_COURS")
-          {
-            // Lecture de la duree approximative restante
-            std::string secondesAvantFinPartieEnCours = "Partie en cours... "
-                                                        + decapsuler(&messageRecu)
-                                                        + " secondes restantes.";
-            partieEnCours.modifierTexte(secondesAvantFinPartieEnCours);
-          }
-        }
-
-        // S'il est l'heure d'envoyer les prochains messages
-        if(horlogeClient.heure() >= heureProchainsMessages)
-        {
-          // Envoi du pseudo
-          std::string messagePseudo;
-          std::string pseudo = zoneTextePseudo.texte();
-          if (pseudo == "")
-          {
-              pseudo = "x";
-          }
-          for(uint32 i = 0; i < pseudo.size(); i++)
-          {
-            if (pseudo[i] == ' ' || pseudo[i] == '\t')
-            {
-              pseudo[i] = '_';
+              etiquetteNbJoueurs.modifierTexte("Nombre de joueurs : " + sint32EnString(listePseudosJoueurs.size()));
             }
           }
-          messagePseudo = "PSEUDO " + pseudo;
-          clientUdp.envoyer(messagePseudo);
 
-          // Demande de l'heure au serveur
-          std::string messageDemandeHeure = "DEMANDE_HEURE " + sint32EnString(horlogeClient.heure());
-          clientUdp.envoyer(messageDemandeHeure);
-
-          // Les prochains messages un peu plus tard
-          heureProchainsMessages += 200;
-        }
-
-        if (boutonQuitter.clique())
-        {
-          break;
-        }
-
-        // S'il est l'heure de la prochaine partie
-        if (heureProchainePartie != 0 && horlogeSynchronisee.heure() >= heureProchainePartie)
-        {
-          SDL_RaiseWindow(this->fenetre);
-
-          // On joue
-          initOpenGL();
-          Scene scene(this->fenetre);
-          scene.reglerHorloge(horlogeSynchronisee.heure());
-          scene.clientUDPAUtiliser(&clientUdp);
-          scene.creerPersonnages(listePseudosJoueurs.size());
-          scene.reglerNumeroJoueur(numeroJoueur);
-          scene.reglerHeureFinPartie(heureFinPartie);
-          scene.creerTableauScores(listePseudosJoueurs.size());
-          scene.reglerPseudosJoueurs(listePseudosJoueurs);
-          scene.executer();
-
-          heureProchainePartie = 0;
-
-          heureProchainsMessages = horlogeClient.heure() + 200;
-
-          // Vide la boite a lettre
-          while("" != clientUdp.recevoir())
+          // Si on clique sur Se connecter
+          if (boutonSeConnecter.clique())
           {
+            // On se connecte
+            clientUdp.envoyer("CONNEXION " + pseudo);
 
+            SDL_RaiseWindow(this->fenetre);
+
+            // On joue
+            initOpenGL();
+            Scene scene(this->fenetre);
+            scene.reglerHorloge(horlogeSynchronisee.heure());
+            scene.clientUDPAUtiliser(&clientUdp);
+            scene.reglerNumeroJoueur(numeroJoueur);
+            scene.creerPersonnage();
+            //scene.creerTableauScores(listePseudosJoueurs.size());
+            //scene.reglerPseudosJoueurs(listePseudosJoueurs);
+            scene.executer();
           }
+
+          if (boutonRetour.clique())
+          {
+            break;
+          }
+          menuConnexion.dessiner();
         }
-        etiquetteHorlogeServeur.modifierTexte("Horloge : " + sint32EnString(horlogeSynchronisee.heure()));
-        menuSynchronisation.dessiner();
       }
-      //initOpenGL();
-      //Scene scene;
-      //scene.executer();
 
       // Force le menu a etre redessine
-      menuConnexion.dessiner(TRUE);
+      //menuPrincipal.dessiner(TRUE);
     }
-    menuConnexion.dessiner();
+    menuPrincipal.dessiner();
   }
+
   // Destruction de la fenetre
   this->detruireFenetreOpenGL();
 
   // Enregistrement d'une eventuelle modification
   this->fichierIniJeu.modifier("pseudo", zoneTextePseudo.texte());
   this->fichierIniJeu.modifier("serveur", zoneTexteServeur.texte());
-  this->fichierIniJeu.modifier("pleinEcran", (TRUE == peCoche) ? "1" : "0");
+  this->fichierIniJeu.modifier("pleinEcran", (TRUE == pleinEcranCoche) ? "1" : "0");
 
   this->fichierIniJeu.enregistrer("jeu.ini");
 
@@ -334,15 +289,6 @@ bool8 Jeu::creerFenetreOpenGL(void)
   // Si l'utilisateur veut jouer en mode "plein ecran"
   if ("1" == fichierIniJeu.lire("pleinEcran"))
   {
-    // Lecture de la plus grande resolution disponnible
-    /*SDL_DisplayMode mode = { SDL_PIXELFORMAT_UNKNOWN, 0, 0, 0, 0 };
-    if (0 != SDL_GetDisplayMode(0, 0, &mode))
-    {
-        std::cout << "Impossile de detecter la resolution" << std::endl;
-    }
-    this->largeurFenetre = mode.w;
-    this->hauteurFenetre = mode.h;*/
-
     // Creation de la fenetre en mode "plein ecran"
     this->fenetre = SDL_CreateWindow(TITRE_APPLICATION, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, this->largeurFenetre, this->hauteurFenetre, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN);
   }
@@ -372,9 +318,8 @@ bool8 Jeu::creerFenetreOpenGL(void)
   if( SDL_GL_SetSwapInterval( 1 ) < 0 )
   {
     printf( "Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError() );
-    //return FALSE;
   }
-  //std::cerr << "Version OpenGL" << glGetString(GL_VERSION) << std::endl;
+  std::cerr << "Version OpenGL " << glGetString(GL_VERSION) << std::endl;
   return TRUE;
 }
 

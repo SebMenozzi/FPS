@@ -9,6 +9,7 @@ class Horloge
     void regler(sint32 heure);
     sint32 heure(void);
   private:
+  	sint32 getTicks(void);
     sint32 heureDepart;
 };
 
