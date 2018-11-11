@@ -78,6 +78,7 @@ float16 Heightmap::lireHauteur(float16 x, float16 y)
   int gridX = (int) floor(x / gridSquareSize);
   int gridY = (int) floor(y / gridSquareSize);
 
+  /*
   if (gridX >= this->largeur - 1 || gridY >= this->hauteur || gridX < 0 || gridY < 0)
   {
     return 0;
@@ -88,20 +89,30 @@ float16 Heightmap::lireHauteur(float16 x, float16 y)
 
   if (xCoord <= (1 - yCoord))
   {
-    Point3Float p1 = { 0, hauteurs[gridX][gridY] / this->atenuation, 0 };
-    Point3Float p2 = { 1, hauteurs[gridX + 1][gridY] / this->atenuation, 0 };
-    Point3Float p3 = { 0, hauteurs[gridX][gridY + 1] / this->atenuation, 1 };
+    Point3Float p1 = { 0, this->hauteurs[gridX][gridY] / this->atenuation, 0 };
+    Point3Float p2 = { 1, this->hauteurs[gridX + 1][gridY] / this->atenuation, 0 };
+    Point3Float p3 = { 0, this->hauteurs[gridX][gridY + 1] / this->atenuation, 1 };
     Point2Float pos = { xCoord, yCoord };
 
     return barycentre(p1, p2, p3, pos);
   }
   else
   {
-    Point3Float p1 = { 1, hauteurs[gridX + 1][gridY] / this->atenuation, 0 };
-    Point3Float p2 = { 1, hauteurs[gridX + 1][gridY + 1] / this->atenuation, 1 };
-    Point3Float p3 = { 0, hauteurs[gridX][gridY + 1] / this->atenuation, 1 };
+    Point3Float p1 = { 1, this->hauteurs[gridX + 1][gridY] / this->atenuation, 0 };
+    Point3Float p2 = { 1, this->hauteurs[gridX + 1][gridY + 1] / this->atenuation, 1 };
+    Point3Float p3 = { 0, this->hauteurs[gridX][gridY + 1] / this->atenuation, 1 };
     Point2Float pos = { xCoord, yCoord };
 
     return barycentre(p1, p2, p3, pos);
   }
+  */
+
+  float16 a = this->hauteurs[gridX][gridY] / this->atenuation;
+  float16 b = this->hauteurs[gridX + 1][gridY] / this->atenuation;
+  float16 c = this->hauteurs[gridX][gridY + 1] / this->atenuation;
+  float16 d = this->hauteurs[gridX + 1][gridY + 1] / this->atenuation;
+  float16 e = a + (b - a) * (gridX - (uint32) gridX);
+  float16 f = c + (d - c) * (gridX - (uint32) gridX);
+  float16 g = e + (f - e) * (gridY - (uint32) gridY);
+  return g;
 }

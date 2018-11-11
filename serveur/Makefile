@@ -2,7 +2,7 @@
 .SUFFIXES :
 
 NAME = serveur
-SRC =	src/main.cpp src/fonctionsUtiles.cpp src/serveurUDP.cpp src/horloge.cpp
+SRC =	src/main.cpp src/fonctionsUtiles.cpp src/serveurUDP.cpp src/horloge.cpp src/fichierINI.cpp
 
 CC = g++
 
