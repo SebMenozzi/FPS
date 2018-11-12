@@ -75,12 +75,12 @@ float16 Heightmap::lireHauteur(float16 x, float16 y)
 {
   // algo de Seb
 
-  float gridSquareSize = this->largeur / ((float) this->hauteurs.size());
+  float gridSquareSize = this->hauteur / ((float) this->hauteurs.size()); // 1.0
 
   int gridX = (int) floor(x / gridSquareSize);
   int gridY = (int) floor(y / gridSquareSize);
 
-  if (gridX >= this->largeur - 1 || gridY >= this->hauteur || gridX < 0 || gridY < 0)
+  if (gridX >= this->largeur || gridY >= this->hauteur || gridX < 0 || gridY < 0)
   {
     return 0;
   }
@@ -88,20 +88,23 @@ float16 Heightmap::lireHauteur(float16 x, float16 y)
   float16 xCoord = fmod(x, gridSquareSize) / gridSquareSize;
   float16 yCoord = fmod(y, gridSquareSize) / gridSquareSize;
 
+  //printf("x1: %f x2: %f\n", ((float16)(getpixel(this->heightmap, x, y) & 0xff)), this->hauteurs[x][y]);
+  printf("x1: %f x2: %f\n", gridX, xCoord);
+
   if (xCoord <= (1 - yCoord))
   {
-    Point3Float p1 = { 0, ((float16)(getpixel(this->heightmap, gridX, gridY) & 0xff)) / this->atenuation, 0 };
-    Point3Float p2 = { 1, ((float16)(getpixel(this->heightmap, gridX + 1, gridY) & 0xff)) / this->atenuation, 0 };
-    Point3Float p3 = { 0, ((float16)(getpixel(this->heightmap, gridX, gridY + 1) & 0xff)) / this->atenuation, 1 };
+    Point3Float p1 = { 0, 0, ((float16)(getpixel(this->heightmap, gridX, gridY) & 0xff)) / this->atenuation };
+    Point3Float p2 = { 1, 0, ((float16)(getpixel(this->heightmap, gridX + 1, gridY) & 0xff)) / this->atenuation };
+    Point3Float p3 = { 0, 1, ((float16)(getpixel(this->heightmap, gridX, gridY + 1) & 0xff)) / this->atenuation };
     Point2Float pos = { xCoord, yCoord };
 
     return barycentre(p1, p2, p3, pos);
   }
   else
   {
-    Point3Float p1 = { 1, ((float16)(getpixel(this->heightmap, gridX + 1, gridY) & 0xff)) / this->atenuation, 0 };
-    Point3Float p2 = { 1, ((float16)(getpixel(this->heightmap, gridX + 1, gridY + 1) & 0xff)) / this->atenuation, 1 };
-    Point3Float p3 = { 0, ((float16)(getpixel(this->heightmap, gridX, gridY + 1) & 0xff)) / this->atenuation, 1 };
+    Point3Float p1 = { 1, 0, ((float16)(getpixel(this->heightmap, gridX + 1, gridY) & 0xff)) / this->atenuation };
+    Point3Float p2 = { 1, 1, ((float16)(getpixel(this->heightmap, gridX + 1, gridY + 1) & 0xff)) / this->atenuation };
+    Point3Float p3 = { 0, 1, ((float16)(getpixel(this->heightmap, gridX, gridY + 1) & 0xff)) / this->atenuation };
     Point2Float pos = { xCoord, yCoord };
 
     return barycentre(p1, p2, p3, pos);

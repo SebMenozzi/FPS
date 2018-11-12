@@ -101,11 +101,12 @@ Uint32 getpixel(SDL_Surface *surface, int x, int y)
   }
 }
 
+// https://en.wikipedia.org/wiki/Barycentric_coordinate_system
 float16 barycentre(Point3Float p1, Point3Float p2, Point3Float p3, Point2Float pos)
 {
-  float16 det = (p2.z - p3.z) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.z - p3.z);
-	float16 l1 = ((p2.z - p3.z) * (pos.x - p3.x) + (p3.x - p2.x) * (pos.y - p3.z)) / det;
-	float16 l2 = ((p3.z - p1.z) * (pos.x - p3.x) + (p1.x - p3.x) * (pos.y - p3.z)) / det;
-	float16 l3 = 1.0f - l1 - l2;
-	return l1 * p1.y + l2 * p2.y + l3 * p3.y;
+  float16 det = (p2.y - p3.y) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.y - p3.y);
+	float16 l1 = ((p2.y - p3.y) * (pos.x - p3.x) + (p3.x - p2.x) * (pos.y - p3.y)) / det; // https://wikimedia.org/api/rest_v1/media/math/render/svg/dd9199d9fee273a1c2cc7f208ada749f46cec051
+	float16 l2 = ((p3.y - p1.y) * (pos.x - p3.x) + (p1.x - p3.x) * (pos.y - p3.y)) / det; // https://wikimedia.org/api/rest_v1/media/math/render/svg/544fbe020e93b8fcd52c79e41b41a376cf92f2ab
+	float16 l3 = 1.0f - l1 - l2; // https://wikimedia.org/api/rest_v1/media/math/render/svg/0c9dc80639f0e46b1cea744cf3ce90ba406ff352
+	return l1 * p1.z + l2 * p2.z + l3 * p3.z;
 }
