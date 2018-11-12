@@ -19,7 +19,7 @@ class Heightmap
 {
   private:
     ConteneurTextures conteneurTextures;
-    std::vector<std::vector<float> > hauteurs;
+    std::vector<std::vector<float16> > hauteurs;
     SDL_Surface* heightmap;
     uint32 hauteur;
     uint32 largeur;

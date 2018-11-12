@@ -20,16 +20,13 @@ Heightmap::Heightmap(const char* nomFichier)
     this->largeur = this->heightmap->w;
     this->hauteur = this->heightmap->h;
 
-    std::vector<float> tmp;
+    std::vector<float16> tmp;
   	for(int y = 0; y < this->hauteur; y++)
   	{
   		tmp.clear();
   		for(int x = 0; x < this->largeur; x++)
   		{
-        Uint32 pixel = getpixel(this->heightmap, x, y);
-  			Uint8 r, g, b;
-  			SDL_GetRGB(pixel, this->heightmap->format, &r, &g, &b);
-  			tmp.push_back((float16) r);
+  			tmp.push_back(((float16) (getpixel(this->heightmap, x, y) & 0xff)));
   		}
   		this->hauteurs.push_back(tmp);
   	}
@@ -63,8 +60,11 @@ void Heightmap::dessiner()
       for(int x = 0; x < this->largeur - 1; x++) {
         glTexCoord2d(x, y);
         glVertex3f(x, y, this->hauteurs[x][y] / this->atenuation);
+        //glVertex3f(x, y, ((float16) (getpixel(this->heightmap, x, y) & 0xff)) / this->atenuation); // ça ne fonctionne pas avec
+
         glTexCoord2d(x, y + 1);
         glVertex3f(x, y + 1, this->hauteurs[x][y + 1] / this->atenuation);
+        //glVertex3f(x, y + 1, ((float16) (getpixel(this->heightmap, x, y + 1) & 0xff)) / this->atenuation); // ça ne fonctionne pas avec
       }
       glEnd();
     }
@@ -73,12 +73,13 @@ void Heightmap::dessiner()
 
 float16 Heightmap::lireHauteur(float16 x, float16 y)
 {
+  // algo de Seb
+
   float gridSquareSize = this->largeur / ((float) this->hauteurs.size());
 
   int gridX = (int) floor(x / gridSquareSize);
   int gridY = (int) floor(y / gridSquareSize);
 
-  /*
   if (gridX >= this->largeur - 1 || gridY >= this->hauteur || gridX < 0 || gridY < 0)
   {
     return 0;
@@ -89,30 +90,40 @@ float16 Heightmap::lireHauteur(float16 x, float16 y)
 
   if (xCoord <= (1 - yCoord))
   {
-    Point3Float p1 = { 0, this->hauteurs[gridX][gridY] / this->atenuation, 0 };
-    Point3Float p2 = { 1, this->hauteurs[gridX + 1][gridY] / this->atenuation, 0 };
-    Point3Float p3 = { 0, this->hauteurs[gridX][gridY + 1] / this->atenuation, 1 };
+    Point3Float p1 = { 0, ((float16)(getpixel(this->heightmap, gridX, gridY) & 0xff)) / this->atenuation, 0 };
+    Point3Float p2 = { 1, ((float16)(getpixel(this->heightmap, gridX + 1, gridY) & 0xff)) / this->atenuation, 0 };
+    Point3Float p3 = { 0, ((float16)(getpixel(this->heightmap, gridX, gridY + 1) & 0xff)) / this->atenuation, 1 };
     Point2Float pos = { xCoord, yCoord };
 
     return barycentre(p1, p2, p3, pos);
   }
   else
   {
-    Point3Float p1 = { 1, this->hauteurs[gridX + 1][gridY] / this->atenuation, 0 };
-    Point3Float p2 = { 1, this->hauteurs[gridX + 1][gridY + 1] / this->atenuation, 1 };
-    Point3Float p3 = { 0, this->hauteurs[gridX][gridY + 1] / this->atenuation, 1 };
+    Point3Float p1 = { 1, ((float16)(getpixel(this->heightmap, gridX + 1, gridY) & 0xff)) / this->atenuation, 0 };
+    Point3Float p2 = { 1, ((float16)(getpixel(this->heightmap, gridX + 1, gridY + 1) & 0xff)) / this->atenuation, 1 };
+    Point3Float p3 = { 0, ((float16)(getpixel(this->heightmap, gridX, gridY + 1) & 0xff)) / this->atenuation, 1 };
     Point2Float pos = { xCoord, yCoord };
 
     return barycentre(p1, p2, p3, pos);
   }
-  */
 
-  float16 a = this->hauteurs[gridX][gridY] / this->atenuation;
-  float16 b = this->hauteurs[gridX + 1][gridY] / this->atenuation;
-  float16 c = this->hauteurs[gridX][gridY + 1] / this->atenuation;
-  float16 d = this->hauteurs[gridX + 1][gridY + 1] / this->atenuation;
-  float16 e = a + (b - a) * (gridX - (uint32) gridX);
-  float16 f = c + (d - c) * (gridX - (uint32) gridX);
-  float16 g = e + (f - e) * (gridY - (uint32) gridY);
+  /*
+  // algo de David
+
+  if (x >= this->largeur || y >= this->hauteur || x < 0 || y < 0)
+  {
+    return 0;
+  }
+
+  //printf("x1:%f x2:%f\n", this->hauteurs[x][y], ((float16) (getpixel(this->heightmap, x, y) & 0xff)));
+
+  float16 a = (((float16)(getpixel(this->heightmap, x, y) & 0xff)) / this->atenuation);
+  float16 b = (((float16)(getpixel(this->heightmap, x+1, y) & 0xff)) / this->atenuation);
+  float16 c = (((float16)(getpixel(this->heightmap, x, y+1) & 0xff)) / this->atenuation);
+  float16 d = (((float16)(getpixel(this->heightmap, x+1, y+1) & 0xff)) / this->atenuation);
+  float16 e = a + (b - a) * (x - (uint32) x);
+  float16 f = c + (d - c) * (x - (uint32) x);
+  float16 g = e + (f - e) * (y - (uint32) y);
   return g;
+  */
 }
