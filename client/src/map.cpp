@@ -1,85 +1,85 @@
 #include <SDL2/SDL.h>
-#include "carte.h"
+#include "map.h"
 
-Carte::Carte(const char* nomFichier)
+Map::Map(const char* nomFichier)
 {
   // Initialisation des attributs
-  this->carte = NULL;
-  this->largeurCarte = 0u;
-  this->hauteurCarte = 0u;
-  this->listeAffichage = 0u;
+  this->map = NULL;
+  this->width = 0u;
+  this->height = 0u;
+  this->draw_list = 0u;
 
   // Tentative de chargement
-  SDL_Surface* imageCarte = SDL_LoadBMP(nomFichier);
+  SDL_Surface* imagemap = SDL_LoadBMP(nomFichier);
 
   // Si l'image est chargee en 24 bits/px
-  if ((NULL != imageCarte) && (24 == imageCarte->format->BitsPerPixel))
+  if ((NULL != imagemap) && (24 == imagemap->format->BitsPerPixel))
   {
-    // Dimension de la carte
-    this->largeurCarte = imageCarte->w;
-    this->hauteurCarte = imageCarte->h;
+    // Dimension de la map
+    this->width = imagemap->w;
+    this->height = imagemap->h;
 
     // Calcule le nombre de cases
-    uint32 nbCases = this->largeurCarte * this->hauteurCarte;
+    uint32 nbCases = this->width * this->height;
 
-    // Instantiation des cases de la carte
-    this->carte = new bool8[nbCases];
+    // Instantiation des cases de la map
+    this->map = new bool8[nbCases];
 
     // Parcours de chaques lignes
-    for(uint32 ligne = 0; ligne < this->hauteurCarte; ligne++)
+    for(uint32 ligne = 0; ligne < this->height; ligne++)
     {
       // Structuration des pixels BGR pour une lecture simplifiee
       typedef struct {uint8 bleu; uint8 vert; uint8 rouge;} bgr;
-      bgr* pixelsCarte = (bgr*) ((uint8*)imageCarte->pixels + (ligne * imageCarte->pitch));
+      bgr* pixelsmap = (bgr*) ((uint8*)imagemap->pixels + (ligne * imagemap->pitch));
 
       // Parcours des pixels de la ligne
-      for(uint32 pixel = 0; pixel < this->largeurCarte; pixel++)
+      for(uint32 pixel = 0; pixel < this->width; pixel++)
       {
         // Si la moyenne des 3 couleurs est superieur � 50% de la luminosit� maximale
-        if((pixelsCarte[pixel].rouge + pixelsCarte[pixel].vert + pixelsCarte[pixel].bleu) > 382)
+        if((pixelsmap[pixel].rouge + pixelsmap[pixel].vert + pixelsmap[pixel].bleu) > 382)
         {
           // Pas de mur
-          this->carte[(this->largeurCarte * ligne) + pixel] = 0;
+          this->map[(this->width * ligne) + pixel] = 0;
         }
         else
         {
-          this->carte[(this->largeurCarte * ligne) + pixel] = 1;
+          this->map[(this->width * ligne) + pixel] = 1;
         }
       }
     }
 
-    // Creation de la liste d'affichage de la carte
-    this->creerListeAffichage();
+    // Creation de la liste d'affichage de la map
+    this->create_draw_list();
 
-    SDL_FreeSurface(imageCarte);
+    SDL_FreeSurface(imagemap);
   }
   else  // Erreur de chargement
   {
-    printf("Erreur de chargement de la carte\n");
+    printf("Erreur de chargement de la map\n");
   }
 }
 
-Carte::~Carte()
+Map::~Map()
 {
-  delete this->carte;
+  delete this->map;
   this->conteneurTextures.supprimer("mur.bmp");
   this->conteneurTextures.supprimer("herbe.bmp");
 }
 
-void Carte::dessiner()
+void Map::draw()
 {
-  glCallList(this->listeAffichage);
+  glCallList(this->draw_list);
 }
 
-void Carte::creerListeAffichage()
+void Map::create_draw_list()
 {
   // Chargement de la texture du mur
   this->conteneurTextures.ajouter("mur.bmp");
   this->conteneurTextures.ajouter("herbe.bmp");
 
   // Creation de la liste d'affichage
-  this->listeAffichage = glGenLists(1);
-  glNewList(this->listeAffichage, GL_COMPILE);
+  this->draw_list = glGenLists(1);
+  glNewList(this->draw_list, GL_COMPILE);
 
   // Activation des textures
   glEnable(GL_TEXTURE_2D);
@@ -93,13 +93,13 @@ void Carte::creerListeAffichage()
   #define HAUTEUR_MURS 1
 
   // Parcours des lignes
-  for(uint32 j = 0; j < this->hauteurCarte; j++)
+  for(uint32 j = 0; j < this->height; j++)
   {
     // Parcours d'une ligne
-    for (uint32 i = 0u; i < this->largeurCarte - 1; i++)
+    for (uint32 i = 0u; i < this->width - 1; i++)
     {
-      caseGauche = this->carte[(j*this->largeurCarte) + i];
-      caseDroite = this->carte[(j*this->largeurCarte) + i+1];
+      caseGauche = this->map[(j*this->width) + i];
+      caseDroite = this->map[(j*this->width) + i+1];
 
       // Si le mur est visible de l'ouest vers l'est
       if ((0 == caseGauche) && (1 == caseDroite))
@@ -131,13 +131,13 @@ void Carte::creerListeAffichage()
   bool8 caseBas;
 
   // Parcours des colonnes
-  for(uint32 j = 0; j < this->largeurCarte - 1; j++)
+  for(uint32 j = 0; j < this->width - 1; j++)
   {
     // Parcours d'une colonne
-    for (uint32 i = 0u; i < this->largeurCarte; i++)
+    for (uint32 i = 0u; i < this->width; i++)
     {
-      caseHaut = this->carte[(j*this->hauteurCarte) + i];
-      caseBas = this->carte[((j+1)*this->hauteurCarte) + i];
+      caseHaut = this->map[(j*this->height) + i];
+      caseBas = this->map[((j+1)*this->height) + i];
 
       // Si le mur est visible du nord vers le sud
       if ((0 == caseHaut) && (1 == caseBas))
@@ -180,9 +180,9 @@ void Carte::creerListeAffichage()
   glEndList();
 }
 
-void Carte::entourage(sint32 x, sint32 y, bool8 entourage[8])
+void Map::contourn(sint32 x, sint32 y, bool8 entourage[8])
 {
-  sint32 largeurCarte = this->largeurCarte;
+  sint32 width = this->width;
 
   // Par defaut, pas de murs
   entourage[0] = 0;
@@ -203,7 +203,7 @@ void Carte::entourage(sint32 x, sint32 y, bool8 entourage[8])
   }
 
   // Si le personnage est a droite
-  if ((sint32)(largeurCarte-1) == x)
+  if ((sint32)(width-1) == x)
   {
     entourage[2] = 1;
     entourage[4] = 1;
@@ -219,26 +219,26 @@ void Carte::entourage(sint32 x, sint32 y, bool8 entourage[8])
   }
 
   // Si le personnage est en haut
-  if ((sint32) (hauteurCarte-1) == y)
+  if ((sint32) (height-1) == y)
   {
     entourage[5] = 1;
     entourage[6] = 1;
     entourage[7] = 1;
   }
 
-  // Construction de la vue de l'entourage dans le milieu de la carte
-  if (y >= 0 && y <= (sint32)hauteurCarte - 1 && x >= 0 && x <= largeurCarte - 1)
+  // Construction de la vue de l'entourage dans le milieu de la map
+  if (y >= 0 && y <= (sint32)height - 1 && x >= 0 && x <= width - 1)
   {
-    if (0 == entourage[0]) entourage[0] = this->carte[(x-1) + ((y-1) * largeurCarte)];
-    if (0 == entourage[1]) entourage[1] = this->carte[(x)   + ((y-1) * largeurCarte)];
-    if (0 == entourage[2]) entourage[2] = this->carte[(x+1) + ((y-1) * largeurCarte)];
-    if (0 == entourage[3]) entourage[3] = this->carte[(x-1) + ((y)   * largeurCarte)];
-    if (0 == entourage[4]) entourage[4] = this->carte[(x+1) + ((y)   * largeurCarte)];
-    if (0 == entourage[5]) entourage[5] = this->carte[(x-1) + ((y+1) * largeurCarte)];
-    if (0 == entourage[6]) entourage[6] = this->carte[(x)   + ((y+1) * largeurCarte)];
-    if (0 == entourage[7]) entourage[7] = this->carte[(x+1) + ((y+1) * largeurCarte)];
+    if (0 == entourage[0]) entourage[0] = this->map[(x-1) + ((y-1) * width)];
+    if (0 == entourage[1]) entourage[1] = this->map[(x)   + ((y-1) * width)];
+    if (0 == entourage[2]) entourage[2] = this->map[(x+1) + ((y-1) * width)];
+    if (0 == entourage[3]) entourage[3] = this->map[(x-1) + ((y)   * width)];
+    if (0 == entourage[4]) entourage[4] = this->map[(x+1) + ((y)   * width)];
+    if (0 == entourage[5]) entourage[5] = this->map[(x-1) + ((y+1) * width)];
+    if (0 == entourage[6]) entourage[6] = this->map[(x)   + ((y+1) * width)];
+    if (0 == entourage[7]) entourage[7] = this->map[(x+1) + ((y+1) * width)];
   }
 
   // ATTENTION : Pour une gestion correcte des collisions,
-  // la carte doit etre entouree de murs.
+  // la map doit etre entouree de murs.
 }

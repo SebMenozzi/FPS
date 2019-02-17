@@ -54,7 +54,7 @@ Scene::Scene(SDL_Window* window)
   SDL_ShowCursor(FALSE);
 
   this->skybox = new Objet3DStatique("skybox.m3s");
-  this->map = new Carte("map.bmp");
+  this->map = new Map("map.bmp");
   this->heightmap = new Heightmap("heightmap.bmp");
 
   // Activation du test de profondeur (desactive par le menu)
@@ -131,7 +131,7 @@ void Scene::run()
   {
     // On effectue la serie de calcule avec la meme heure actuelle
     this->heureActuelle = this->clock.get_time();
-    gererEvenements();
+    handle_events();
     animer();
 
     // On affiche dans le titre les positions (pour debug)
@@ -408,7 +408,7 @@ void Scene::animer(void)
     this->personnages[this->player_id]->positionSurLaCarte(&positionmapX, &positionmapY, &positionmapZ);
 
     bool8 entouragePersonnage[8] = {0};
-    this->map->entourage(positionmapX, positionmapY, entouragePersonnage);
+    this->map->contourn(positionmapX, positionmapY, entouragePersonnage);
 
     float16 hauteurHeightmap = this->heightmap->lireHauteur(positionmapX, positionmapY);
 
@@ -579,7 +579,7 @@ void Scene::dessiner(void)
   this->skybox->dessiner();
 
   // Dessin de la skybox
-  this->map->dessiner();
+  this->map->draw();
 
   // Dessin de la heightmap
   this->heightmap->dessiner();
@@ -605,7 +605,7 @@ void Scene::afficher(void)
   SDL_GL_SwapWindow(this->window);
 }
 
-void Scene::gererEvenements(void)
+void Scene::handle_events(void)
 {
   SDL_Event evenement;
   uint32 i = 0;

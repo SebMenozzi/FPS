@@ -18,7 +18,7 @@
 #include "init.h"
 #include "configuration.h"
 #include "clientUDP.h"
-#include "horloge.h"
+#include "clock.h"
 #include "fonctionsUtiles.h"
 #include "fichierINI.h"
 
@@ -213,13 +213,13 @@ bool8 Game::run(void)
             // On joue
             initOpenGL();
             Scene scene(this->window);
-            scene.reglerHorloge(horlogeSynchronisee.get_time());
+            scene.set_clock(horlogeSynchronisee.get_time());
             scene.clientUDPAUtiliser(&clientUdp);
-            scene.reglerNumeroJoueur(numeroJoueur);
-            scene.creerPersonnage();
+            scene.set_player_id(numeroJoueur);
+            scene.create_player();
             //scene.creerTableauScores(listePseudosJoueurs.size());
             //scene.reglerPseudosJoueurs(listePseudosJoueurs);
-            scene.executer();
+            scene.run();
           }
 
           if (boutonRetour.clique()) {

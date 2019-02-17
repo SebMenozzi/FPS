@@ -2,12 +2,12 @@
 .SUFFIXES :
 
 NAME = client
-SRC =	src/gui/bouton.cpp src/gui/caseACocher.cpp src/carte.cpp src/gui/champSaisieNumerique.cpp \
+SRC =	src/gui/bouton.cpp src/gui/caseACocher.cpp src/map.cpp src/gui/champSaisieNumerique.cpp \
 	src/conteneurTextures.cpp src/gui/etiquette.cpp src/gui/etiquetteOverlay.cpp      \
-	src/fonctionsUtiles.cpp src/historiqueDesPositions.cpp src/horloge.cpp    \
+	src/fonctionsUtiles.cpp src/historiqueDesPositions.cpp src/clock.cpp    \
 	src/gui/imageOverlay.cpp src/init.cpp src/main.cpp src/gui/menu.cpp src/objet3DStatique.cpp   \
 	src/gui/overlay.cpp src/personnage.cpp src/scene.cpp src/clientUDP.cpp src/gui/widget.cpp    \
-	src/gui/widgetOverlay.cpp src/gui/zoneTexte.cpp src/jeu.cpp src/fichierINI.cpp src/objet3D.cpp \
+	src/gui/widgetOverlay.cpp src/gui/zoneTexte.cpp src/game.cpp src/fichierINI.cpp src/objet3D.cpp \
 	src/traitementChemin.cpp src/conteneurMateriaux.cpp src/materiau.cpp \
 	src/heightmap.cpp
 

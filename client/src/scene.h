@@ -14,7 +14,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include "objet3DStatique.h"
-#include "carte.h"
+#include "map.h"
 #include "heightmap.h"
 #include "personnage.h"
 #include "clock.h"
@@ -38,13 +38,13 @@ class Scene
     uint32 time_last_move;
 
     Objet3DStatique* skybox;
-    Carte* map;
+    Map* map;
     Heightmap* heightmap;
 
     TTF_Font* font;
     std::string displayed_text;
 
-    void gererEvenements(void);
+    void handle_events(void);
     void animer(void);
     void dessiner(void);
     void dessinerTerrain(void);

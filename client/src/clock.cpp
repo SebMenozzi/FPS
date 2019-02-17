@@ -1,4 +1,4 @@
-#include "horloge.h"
+#include "clock.h"
 
 #ifdef _WIN32
   #include <windows.h>
