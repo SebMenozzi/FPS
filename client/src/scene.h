@@ -17,7 +17,7 @@
 #include "carte.h"
 #include "heightmap.h"
 #include "personnage.h"
-#include "horloge.h"
+#include "clock.h"
 #include "clientUDP.h"
 #include "gui/overlay.h"
 #include "gui/imageOverlay.h"
@@ -27,22 +27,22 @@ class Scene
 {
   private:
     //typedef std::map<std::string, GLuint> Textures;
-    SDL_Window* fenetre;
-    int largeurFenetre;
-    int hauteurFenetre;
+    SDL_Window* window;
+    int width;
+    int height;
 
-    Horloge horloge;
+    Clock clock;
     ClientUDP* clientUDP;
 
-    bool8 continuer;
-    uint32 tempsDernierPas;
+    bool8 cont;
+    uint32 time_last_move;
 
     Objet3DStatique* skybox;
-    Carte* carte;
+    Carte* map;
     Heightmap* heightmap;
 
-    TTF_Font* police;
-    std::string texteAAfficher;
+    TTF_Font* font;
+    std::string displayed_text;
 
     void gererEvenements(void);
     void animer(void);
@@ -53,7 +53,7 @@ class Scene
 
     //Personnage* personnage;
     std::vector<Personnage*> personnages;
-    uint32 numeroJoueur;
+    uint32 player_id;
 
     sint32 heureFinPartie;
 
@@ -73,14 +73,14 @@ class Scene
   public:
     Scene(SDL_Window* fenetre);
     ~Scene();
-    void executer();
+    void run();
     void clientUDPAUtiliser(ClientUDP* clientUDP);
-    void reglerHorloge(sint32 heure);
-    void creerPersonnage();
-    void reglerNumeroJoueur(uint32 numeroJoueur);
-    void reglerHeureFinPartie(sint32 heureFin);
+    void set_clock(sint32 heure);
+    void create_player();
+    void set_player_id(uint32 player_id);
+    void set_endtime(sint32 heureFin);
     void creerTableauScores(uint32 nbJoueurs);
-    void reglerPseudosJoueurs(std::vector<std::string> listePseudosJoueurs);
+    void set_usernames(std::vector<std::string> listePseudosJoueurs);
 };
 
-#endif // SCENE_H_INCLUDED
+#endif

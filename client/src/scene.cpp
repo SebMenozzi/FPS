@@ -19,69 +19,69 @@
 #define VITESSE_DEPLACEMENT (10.0f)
 #define DUREE_ENTRE_SNAPSHOT 50
 
-Scene::Scene(SDL_Window* fenetre)
+Scene::Scene(SDL_Window* window)
 {
   // Initialisation des pointeurs
-  this->fenetre = NULL;
+  this->window = NULL;
   this->clientUDP = NULL;
   this->skybox = NULL;
-  this->carte = NULL;
+  this->map = NULL;
   this->heightmap = NULL;
-  this->police = NULL;
+  this->font = NULL;
   this->overlay = NULL;
   this->viseur = NULL;
   this->fontProchaineApparition = NULL;
   this->fondTableauScores = NULL;
   this->etiquetteProchaineApparition = NULL;
-  this->fenetre = fenetre;
-  this->largeurFenetre = 0;
-  this->hauteurFenetre = 0;
+  this->window = window;
+  this->width = 0;
+  this->height = 0;
   this->overlay = 0;
 
   // Creation de l'overlay
-  this->overlay = new Overlay(fenetre);
+  this->overlay = new Overlay(window);
 
-  // Recuperation des dimentions de la fenetre
-  SDL_GetWindowSize(fenetre, &this->largeurFenetre, &this->hauteurFenetre);
+  // Recuperation des dimentions de la window
+  SDL_GetWindowSize(window, &this->width, &this->height);
 
-  // Maintien de la souris dans la fenetre
-  SDL_SetWindowGrab(this->fenetre, SDL_TRUE);
+  // Maintien de la souris dans la window
+  SDL_SetWindowGrab(this->window, SDL_TRUE);
 
   // La souris est au centre de l'ecran
-  SDL_WarpMouseInWindow(this->fenetre, (this->largeurFenetre / 2), (this->hauteurFenetre / 2));
+  SDL_WarpMouseInWindow(this->window, (this->width / 2), (this->height / 2));
 
   // La souris est invisible
   SDL_ShowCursor(FALSE);
 
   this->skybox = new Objet3DStatique("skybox.m3s");
-  this->carte = new Carte("carte.bmp");
+  this->map = new Carte("map.bmp");
   this->heightmap = new Heightmap("heightmap.bmp");
 
   // Activation du test de profondeur (desactive par le menu)
   glEnable(GL_DEPTH_TEST);
 
   // Reglage de l'horloge
-  horloge.regler(0);
+  clock.adjust(0);
 
-  // Chargement de la police
-  police = TTF_OpenFont("Cartonsix NC.ttf", 40);
+  // Chargement de la font
+  font = TTF_OpenFont("Cartonsix NC.ttf", 40);
 
   // Creation du viseur
-  this->viseur = new ImageOverlay(this->fenetre, "viseur.bmp", (this->largeurFenetre / 2), (this->hauteurFenetre / 2));
+  this->viseur = new ImageOverlay(this->window, "viseur.bmp", (this->width / 2), (this->height / 2));
   this->overlay->ajouter(this->viseur);
 
   // Fond de l'ecran de "prochaine apparition"
-  this->fontProchaineApparition = new ImageOverlay(this->fenetre, "prochaine_apparition.bmp", (this->largeurFenetre / 2), (this->hauteurFenetre / 2));
+  this->fontProchaineApparition = new ImageOverlay(this->window, "prochaine_apparition.bmp", (this->width / 2), (this->height / 2));
   this->overlay->ajouter(this->fontProchaineApparition);
   this->fontProchaineApparition->rendreInvisible();
 
   // Etiquette de l'ecran de "prochaine apparition"
-  this->etiquetteProchaineApparition = new EtiquetteOverlay(this->fenetre, (this->largeurFenetre / 2), (this->hauteurFenetre / 2), "Prochaine apparition sur scene dans 5 secondes", 35);
+  this->etiquetteProchaineApparition = new EtiquetteOverlay(this->window, (this->width / 2), (this->height / 2), "Prochaine apparition sur scene dans 5 secondes", 35);
   this->overlay->ajouter(this->etiquetteProchaineApparition);
   this->etiquetteProchaineApparition->rendreInvisible();
 
   // Creation du tableau des scores
-  this->fondTableauScores = new ImageOverlay(this->fenetre, "tableau_scores.bmp", (this->largeurFenetre / 2), (this->hauteurFenetre / 2));
+  this->fondTableauScores = new ImageOverlay(this->window, "tableau_scores.bmp", (this->width / 2), (this->height / 2));
   this->overlay->ajouter(this->fondTableauScores);
   this->fondTableauScores->rendreInvisible();
 }
@@ -106,58 +106,58 @@ Scene::~Scene()
   }
   */
 
-  // Liberation de la police
-  TTF_CloseFont(police);
+  // Liberation de la font
+  TTF_CloseFont(font);
 
   delete this->skybox;
 
   // La souris est visible
   SDL_ShowCursor(TRUE);
 
-  // Ne maintien plus la souris dans la fenetre
+  // Ne maintien plus la souris dans la window
   //SDL_WM_GrabInput(SDL_GRAB_OFF);
-  SDL_SetWindowGrab(this->fenetre, SDL_FALSE);
+  SDL_SetWindowGrab(this->window, SDL_FALSE);
 }
 
-void Scene::executer()
+void Scene::run()
 {
   // Initialisation des variables de gestion du temps
-  this->tempsDernierPas = 0;
+  this->time_last_move = 0;
   uint32 heureDernierPas = SDL_GetTicks();
 
-  this->continuer = TRUE;
+  this->cont = TRUE;
 
-  while(this->continuer)
+  while(this->cont)
   {
     // On effectue la serie de calcule avec la meme heure actuelle
-    this->heureActuelle = this->horloge.heure();
+    this->heureActuelle = this->clock.get_time();
     gererEvenements();
     animer();
 
     // On affiche dans le titre les positions (pour debug)
     char titre[100] = {0};
     sprintf(titre, "x=%f y=%f z=%f aH=%f aV=%f",
-      this->personnages[this->numeroJoueur]->lirePositionX(),
-      this->personnages[this->numeroJoueur]->lirePositionY(),
-      this->personnages[this->numeroJoueur]->lirePositionZ(),
-      this->personnages[this->numeroJoueur]->lireAngleHorizontal(),
-      this->personnages[this->numeroJoueur]->lireAngleVertical()
+      this->personnages[this->player_id]->lirePositionX(),
+      this->personnages[this->player_id]->lirePositionY(),
+      this->personnages[this->player_id]->lirePositionZ(),
+      this->personnages[this->player_id]->lireAngleHorizontal(),
+      this->personnages[this->player_id]->lireAngleVertical()
     );
-    SDL_SetWindowTitle(this->fenetre, titre);
+    SDL_SetWindowTitle(this->window, titre);
 
     dessiner();
     dessiner2D();
     afficher();
 
     // On calcule le temps de construction de la derniere image
-    this->tempsDernierPas = SDL_GetTicks() - heureDernierPas;
-    heureDernierPas += this->tempsDernierPas;
+    this->time_last_move = SDL_GetTicks() - heureDernierPas;
+    heureDernierPas += this->time_last_move;
 
     /*
     // Detection de la fin de la partie
     if (this->heureActuelle >= this->heureFinPartie)
     {
-      this->continuer = FALSE;
+      this->cont = FALSE;
 
       bool8 afficherTableauScores = TRUE;
 
@@ -228,23 +228,23 @@ void Scene::animer(void)
   {
     float16 positionX = 0, positionY = 0, positionZ = 0;
     // Positionne le personnage sur le sol
-    if (this->personnages[this->numeroJoueur]->lirePositionX() < 0) {
+    if (this->personnages[this->player_id]->lirePositionX() < 0) {
       positionX = 0;
     }
-    if (this->personnages[this->numeroJoueur]->lirePositionY() < 0) {
+    if (this->personnages[this->player_id]->lirePositionY() < 0) {
       positionY = 0;
     }
 
-    if (this->personnages[this->numeroJoueur]->lirePositionX() > this->heightmap->w - 2) {
+    if (this->personnages[this->player_id]->lirePositionX() > this->heightmap->w - 2) {
       positionX = this->heightmap->w - 2;
     }
 
-    if (this->personnages[this->numeroJoueur]->lirePositionY() > this->heightmap->h - 1) {
+    if (this->personnages[this->player_id]->lirePositionY() > this->heightmap->h - 1) {
       positionY = this->heightmap->h - 1;
     }
 
-    float16 x = this->personnages[this->numeroJoueur]->lirePositionX();
-    float16 y = this->personnages[this->numeroJoueur]->lirePositionY();
+    float16 x = this->personnages[this->player_id]->lirePositionX();
+    float16 y = this->personnages[this->player_id]->lirePositionY();
     float16 a = (((float16) (getpixel(this->heightmap, x, y) & 0xff)) / this->atenuation);
     float16 b = (((float16) (getpixel(this->heightmap, x + 1, y )& 0xff)) / this->atenuation);
     float16 c = (((float16) (getpixel(this->heightmap, x, y + 1) & 0xff)) / this->atenuation);
@@ -255,7 +255,7 @@ void Scene::animer(void)
 
     positionZ = g;
 
-    this->personnages[numeroJoueur]->positionner(
+    this->personnages[player_id]->positionner(
       positionX,
       positionY,
       positionZ
@@ -328,18 +328,18 @@ void Scene::animer(void)
 
   if (touches[SDL_GetScancodeFromKey(SDLK_UP)])
   {
-    this->personnages[this->numeroJoueur]->goUp();
+    this->personnages[this->player_id]->goUp();
   }
   else if (touches[SDL_GetScancodeFromKey(SDLK_DOWN)])
   {
-    this->personnages[this->numeroJoueur]->goDown();
+    this->personnages[this->player_id]->goDown();
   }
 
   delete[] touches;
 
   /*
   // Si on est en mode reapparition
-  if (this->personnages[this->numeroJoueur]->heureReapparition() > this->heureActuelle)
+  if (this->personnages[this->player_id]->heureReapparition() > this->heureActuelle)
   {
     // Le menu de reapparition sera affiche
     this->fontProchaineApparition->rendreVisible();
@@ -347,7 +347,7 @@ void Scene::animer(void)
 
     // Mise a jour du message de reapparition
     std::stringstream message;
-    sint32 secondesRestantes = (this->personnages[this->numeroJoueur]->heureReapparition() - this->heureActuelle) / 1000;
+    sint32 secondesRestantes = (this->personnages[this->player_id]->heureReapparition() - this->heureActuelle) / 1000;
     message << "Prochaine apparition dans " << secondesRestantes << " seconde" << ((secondesRestantes >= 2) ? "s" : "") << ".";
     this->etiquetteProchaineApparition->modifierTexte(message.str());
   }
@@ -361,10 +361,10 @@ void Scene::animer(void)
 
   // Si un deplacement est demande et qu'on n'est pas en mode "reapparition"
   // TODO : Un mort ne doit pas pouvoir tirer avant l'heure de sa reaparition
-  if (deplacement/* && this->personnages[this->numeroJoueur]->heureReapparition() < this->heureActuelle*/)
+  if (deplacement/* && this->personnages[this->player_id]->heureReapparition() < this->heureActuelle*/)
   {
     // Calcule de la distance a parcourir
-    float16 distance = (float) tempsDernierPas * VITESSE_DEPLACEMENT / 1000.0f;
+    float16 distance = (float) time_last_move * VITESSE_DEPLACEMENT / 1000.0f;
 
     /*
     // EN GERANT LES LAGS
@@ -379,40 +379,40 @@ void Scene::animer(void)
     for(uint32 i = 0; i < nbSegments; i++)
     {
       // Recuperation de l'environnement
-      sint32 positionCarteX = 0, positionCarteY = 0, positionCarteZ = 0;
-      this->personnages[this->numeroJoueur]->positionSurLaCarte(&positionCarteX, &positionCarteY, &positionCarteZ);
+      sint32 positionmapX = 0, positionmapY = 0, positionmapZ = 0;
+      this->personnages[this->player_id]->positionSurLamap(&positionmapX, &positionmapY, &positionmapZ);
 
       bool8 entouragePersonnage[8] = {0};
-      this->carte->entourage(positionCarteX, positionCarteY, entouragePersonnage);
+      this->map->entourage(positionmapX, positionmapY, entouragePersonnage);
 
       // Deplacement du personnage dans la direction demande
-      this->personnages[this->numeroJoueur]->deplacer(TAILLE_MINI_DISTANCE, direction, entouragePersonnage);
+      this->personnages[this->player_id]->deplacer(TAILLE_MINI_DISTANCE, direction, entouragePersonnage);
     }
 
     // Pour la distance restante
 
     // Recuperation de l'environnement
-    sint32 positionCarteX = 0, positionCarteY = 0, positionCarteZ = 0;
-    this->personnages[this->numeroJoueur]->positionSurLaCarte(&positionCarteX, &positionCarteY, &positionCarteZ);
+    sint32 positionmapX = 0, positionmapY = 0, positionmapZ = 0;
+    this->personnages[this->player_id]->positionSurLamap(&positionmapX, &positionmapY, &positionmapZ);
 
     bool8 entouragePersonnage[8] = {0};
-    this->carte->entourage(positionCarteX, positionCarteY, entouragePersonnage);
+    this->map->entourage(positionmapX, positionmapY, entouragePersonnage);
 
     // Deplacement du personnage dans la direction demande
-    this->personnages[this->numeroJoueur]->deplacer(distanceRestante, direction, entouragePersonnage);
+    this->personnages[this->player_id]->deplacer(distanceRestante, direction, entouragePersonnage);
     */
 
     // SANS GERER LES LAGS
 
-    float16 positionCarteX = 0, positionCarteY = 0, positionCarteZ = 0;
-    this->personnages[this->numeroJoueur]->positionSurLaCarte(&positionCarteX, &positionCarteY, &positionCarteZ);
+    float16 positionmapX = 0, positionmapY = 0, positionmapZ = 0;
+    this->personnages[this->player_id]->positionSurLaCarte(&positionmapX, &positionmapY, &positionmapZ);
 
     bool8 entouragePersonnage[8] = {0};
-    this->carte->entourage(positionCarteX, positionCarteY, entouragePersonnage);
+    this->map->entourage(positionmapX, positionmapY, entouragePersonnage);
 
-    float16 hauteurHeightmap = this->heightmap->lireHauteur(positionCarteX, positionCarteY);
+    float16 hauteurHeightmap = this->heightmap->lireHauteur(positionmapX, positionmapY);
 
-    this->personnages[this->numeroJoueur]->deplacer(distance, direction, entouragePersonnage, hauteurHeightmap);
+    this->personnages[this->player_id]->deplacer(distance, direction, entouragePersonnage, hauteurHeightmap);
   }
 
   // Envoi de la position au serveur toutes les 50 ms en moyenne
@@ -426,11 +426,11 @@ void Scene::animer(void)
 
     message << "POSITION_JOUEUR ";
     message << this->heureActuelle << " ";
-    message << this->personnages[this->numeroJoueur]->lirePositionX() << " "; // composante x
-    message << this->personnages[this->numeroJoueur]->lirePositionY() << " "; // composante y
-    message << this->personnages[this->numeroJoueur]->lirePositionZ() << " "; // composante z
-    message << this->personnages[this->numeroJoueur]->lireAngleHorizontal() << " "; // angle horizontal
-    message << this->personnages[this->numeroJoueur]->lireAngleVertical() << " "; // angle horizontal
+    message << this->personnages[this->player_id]->lirePositionX() << " "; // composante x
+    message << this->personnages[this->player_id]->lirePositionY() << " "; // composante y
+    message << this->personnages[this->player_id]->lirePositionZ() << " "; // composante z
+    message << this->personnages[this->player_id]->lireAngleHorizontal() << " "; // angle horizontal
+    message << this->personnages[this->player_id]->lireAngleVertical() << " "; // angle horizontal
 
     this->clientUDP->envoyer(message.str());
   }
@@ -452,13 +452,13 @@ void Scene::animer(void)
     float16 angleVertical = stringEnFloat16(decapsuler(&message));
 
     /*
-    this->personnages[numeroJoueur]->positionner(
+    this->personnages[player_id]->positionner(
       positionX,
       positionY,
       positionZ
     );
 
-    this->personnages[numeroJoueur]->orienter(angleHorizontal, angleVertical);
+    this->personnages[player_id]->orienter(angleHorizontal, angleVertical);
     */
   }
   /*
@@ -521,7 +521,7 @@ void Scene::animer(void)
     Point3Float pointReapparition = { positionXReapparition, positionYReapparition, positionZReapparition };
 
     // Si c'est notre personnage qui est en mode reapparition
-    if (this->numeroJoueur == numeroDuJoueur)
+    if (this->player_id == numeroDuJoueur)
     {
       // Repositionne notre personnage au point impose
       this->personnages[numeroDuJoueur]->positionner(pointReapparition.x + 0.5, pointReapparition.y + 0.5, pointReapparition.z + 0.5);
@@ -536,7 +536,7 @@ void Scene::animer(void)
   for(uint32 i = 0; i < this->personnages.size(); i++)
   {
     // Autres personnages
-    if (i != numeroJoueur)
+    if (i != player_id)
     {
       this->personnages[i]->positionnerDepuisLHistorique(this->heureActuelle - 100);
     }
@@ -552,14 +552,14 @@ void Scene::dessiner(void)
   // Couleur rgba de vidage de l'ecran
   glClearColor(0.0, 0.0, 0.0, 0.0);
 
-  // Definition de la fenetre
-  glViewport(0, 0, this->largeurFenetre, this->hauteurFenetre);
+  // Definition de la window
+  glViewport(0, 0, this->width, this->height);
 
   // Definition de la zone visible
   glLoadIdentity();
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(ANGLE_VISION, (GLdouble) this->largeurFenetre / (GLdouble)this->hauteurFenetre, PRET, LOIN);
+  gluPerspective(ANGLE_VISION, (GLdouble) this->width / (GLdouble)this->height, PRET, LOIN);
 
   // Activation du tampon de profondeur
   glEnable(GL_DEPTH_TEST);
@@ -573,13 +573,13 @@ void Scene::dessiner(void)
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
-  this->personnages[this->numeroJoueur]->regarder();
+  this->personnages[this->player_id]->regarder();
 
   // Dessin de la skybox
   this->skybox->dessiner();
 
   // Dessin de la skybox
-  this->carte->dessiner();
+  this->map->dessiner();
 
   // Dessin de la heightmap
   this->heightmap->dessiner();
@@ -587,7 +587,7 @@ void Scene::dessiner(void)
   // Dessin des autres personnages
   for(uint32 i = 0; i < this->personnages.size(); i++)
   {
-    if (i != this->numeroJoueur)
+    if (i != this->player_id)
     {
       // TODO : Ne pas afficher les personnages en reapparition, idem pour le test du tir cote serveur
       // Si le personnage n'est plus en mode "reapparition"
@@ -602,7 +602,7 @@ void Scene::dessiner(void)
 void Scene::afficher(void)
 {
   glFlush();
-  SDL_GL_SwapWindow(this->fenetre);
+  SDL_GL_SwapWindow(this->window);
 }
 
 void Scene::gererEvenements(void)
@@ -614,23 +614,23 @@ void Scene::gererEvenements(void)
       switch(evenement.type)
       {
         case SDL_QUIT:
-          this->continuer = FALSE;
+          this->cont = FALSE;
           break;
 
         case SDL_MOUSEMOTION:
           // Tourne le personnage selon le deplacement de la souris
-          this->personnages[this->numeroJoueur]->tournerHorizontalement(-evenement.motion.xrel * 0.06);
-          this->personnages[this->numeroJoueur]->tournerVerticalement(-evenement.motion.yrel * 0.06);
+          this->personnages[this->player_id]->tournerHorizontalement(-evenement.motion.xrel * 0.06);
+          this->personnages[this->player_id]->tournerVerticalement(-evenement.motion.yrel * 0.06);
 
-          // Si la souris s'ecarte de plus de 10 px du centre de la fenetre
-          if ( abs(evenement.motion.x - (this->largeurFenetre / 2)) > 10
-            || abs(evenement.motion.y - (this->hauteurFenetre / 2)) > 10)
+          // Si la souris s'ecarte de plus de 10 px du centre de la window
+          if ( abs(evenement.motion.x - (this->width / 2)) > 10
+            || abs(evenement.motion.y - (this->height / 2)) > 10)
           {
             // Desactive les evenements de type SDL_MOUSEMOTION
             SDL_EventState(SDL_MOUSEMOTION,SDL_DISABLE);
 
-            // Repositionne la souris au centre de la fenetre
-            SDL_WarpMouseInWindow(this->fenetre, this->largeurFenetre/2, this->hauteurFenetre/2 );
+            // Repositionne la souris au centre de la window
+            SDL_WarpMouseInWindow(this->window, this->width/2, this->height/2 );
 
             // Lecture de la position relative de la souris pour
             // ne pas detecter de deplacement de souris plus tard
@@ -650,13 +650,13 @@ void Scene::gererEvenements(void)
             // Permet de quitter grace a la touche Echap
             if (evenement.key.keysym.sym == SDLK_ESCAPE)
             {
-              this->continuer = FALSE;
+              this->cont = FALSE;
             }
           }
           break;
 
         case SDL_MOUSEBUTTONDOWN:
-          if (this->personnages[numeroJoueur]->heureReapparition() < this->heureActuelle)
+          if (this->personnages[player_id]->heureReapparition() < this->heureActuelle)
           {
             std::stringstream message;
             message << "TIR " << sint32EnString(this->heureActuelle);
@@ -676,15 +676,15 @@ void Scene::clientUDPAUtiliser(ClientUDP* clientUDP)
   this->clientUDP = clientUDP;
 }
 
-void Scene::reglerHorloge(sint32 heure)
+void Scene::set_clock(sint32 heure)
 {
-  this->horloge.regler(heure);
+  this->clock.adjust(heure);
 }
 
-void Scene::creerPersonnage()
+void Scene::create_player()
 {
   // Lecture de l'heure actuelle pour determiner l'heure de la premiere apparition
-  sint32 heureActuelle = this->horloge.heure();
+  sint32 heureActuelle = this->clock.get_time();
 
   this->clientUDP->envoyer("DEMANDE_POSITION_JOUEUR");
 
@@ -694,12 +694,12 @@ void Scene::creerPersonnage()
   // Le personnage est immediatement plonge dans le mode "reapparition"
   // pendant 5 secondes, le temps d'obtenir des reponses du serveur (position réelle du personnage, la map...)
 
-  //this->personnages[this->numeroJoueur]->heureReapparition(heureActuelle + 5000);
+  //this->personnages[this->player_id]->heureReapparition(heureActuelle + 5000);
 }
 
-void Scene::reglerNumeroJoueur(uint32 numeroJoueur)
+void Scene::set_player_id(uint32 player_id)
 {
-  this->numeroJoueur = numeroJoueur;
+  this->player_id = player_id;
 }
 
 void Scene::dessiner2D(void)
@@ -709,9 +709,9 @@ void Scene::dessiner2D(void)
   glLoadIdentity();
   glMatrixMode(GL_PROJECTION);
 
-  // Definition de la fenetre
+  // Definition de la window
   glLoadIdentity();
-  gluOrtho2D(0.0, (GLdouble) this->largeurFenetre, 0.0, (GLdouble) this->hauteurFenetre);
+  gluOrtho2D(0.0, (GLdouble) this->width, 0.0, (GLdouble) this->height);
 
   // Desactivation du test de profondeur
   glDisable(GL_DEPTH_TEST);
@@ -734,17 +734,17 @@ void Scene::creerTableauScores(uint32 nbJoueurs)
   for(uint32 i = 0; i < nbJoueurs; i++)
   {
     // Pseudo
-    this->etiquettesScoresPseudo.push_back(new EtiquetteOverlay(this->fenetre, (this->largeurFenetre/2) - 150, 150+30*i, "Pseudo"));
+    this->etiquettesScoresPseudo.push_back(new EtiquetteOverlay(this->window, (this->width/2) - 150, 150+30*i, "Pseudo"));
     this->etiquettesScoresPseudo[i]->rendreInvisible();
     this->overlay->ajouter(this->etiquettesScoresPseudo[i]);
 
     // Emis
-    this->etiquettesScoresEmis.push_back(new EtiquetteOverlay(this->fenetre, (this->largeurFenetre/2), 150+30*i, "Emis"));
+    this->etiquettesScoresEmis.push_back(new EtiquetteOverlay(this->window, (this->width/2), 150+30*i, "Emis"));
     this->etiquettesScoresEmis[i]->rendreInvisible();
     this->overlay->ajouter(this->etiquettesScoresEmis[i]);
 
     // Recu
-    this->etiquettesScoresRecu.push_back(new EtiquetteOverlay(this->fenetre, (this->largeurFenetre/2) + 155, 150+30*i, "Recus"));
+    this->etiquettesScoresRecu.push_back(new EtiquetteOverlay(this->window, (this->width/2) + 155, 150+30*i, "Recus"));
     this->etiquettesScoresRecu[i]->rendreInvisible();
     this->overlay->ajouter(this->etiquettesScoresRecu[i]);
   }
