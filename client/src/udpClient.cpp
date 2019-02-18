@@ -9,7 +9,7 @@ UDPClient::UDPClient()
   // Socket
   this->udpSocket = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
-  fcntl (this->udpSocket, F_SETFL, fcntl (this->udpSocket, F_GETFL) | O_NONBLOCK);
+  fcntl(this->udpSocket, F_SETFL, fcntl (this->udpSocket, F_GETFL) | O_NONBLOCK);
 
   printf("UDP CLient has been successfully created!\n");
 }

@@ -137,7 +137,7 @@ void Scene::draw(void)
   // Dessin de la skybox
   this->skybox->dessiner();
 
-  // Dessin de la skybox
+  // Dessin de la map
   this->map->draw();
 
   // Dessin de la heightmap
@@ -196,7 +196,7 @@ void Scene::handleEvents(void)
           if (event.key.repeat == 0) {
             // Quit by pressing the escape key
             if (event.key.keysym.sym == SDLK_ESCAPE) {
-              this->quit = FALSE;
+              this->quit = TRUE;
             }
           }
           break;
