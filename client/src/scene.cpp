@@ -137,11 +137,11 @@ void Scene::executer()
     // On affiche dans le titre les positions (pour debug)
     char titre[100] = {0};
     sprintf(titre, "x=%f y=%f z=%f aH=%f aV=%f",
-      this->personnages[this->numeroJoueur]->lirePositionX(),
-      this->personnages[this->numeroJoueur]->lirePositionY(),
-      this->personnages[this->numeroJoueur]->lirePositionZ(),
-      this->personnages[this->numeroJoueur]->lireAngleHorizontal(),
-      this->personnages[this->numeroJoueur]->lireAngleVertical()
+      this->players[this->numeroJoueur]->get_x(),
+      this->players[this->numeroJoueur]->get_y(),
+      this->players[this->numeroJoueur]->get_z(),
+      this->players[this->numeroJoueur]->get_horizontal_angle(),
+      this->players[this->numeroJoueur]->get_vertical_angle()
     );
     SDL_SetWindowTitle(this->fenetre, titre);
 
@@ -185,29 +185,29 @@ void Scene::executer()
         std::string entete = decapsuler(&message);
         if (entete == "SCORES")
         {
-          // Mise a jour des scores des personnages
-          for(uint32 i = 0; i < this->personnages.size(); i++)
+          // Mise a jour des scores des players
+          for(uint32 i = 0; i < this->players.size(); i++)
           {
             uint32 emis = stringEnUint32(decapsuler(&message));
             uint32 recu = stringEnUint32(decapsuler(&message));
-            this->personnages[i]->mettreAJourScore(emis, recu);
+            this->players[i]->mettreAJourScore(emis, recu);
           }
         }
 
         // Affichage des scores
         this->fondTableauScores->rendreVisible();
 
-        for(uint32 i = 0; i < this->personnages.size(); i++)
+        for(uint32 i = 0; i < this->players.size(); i++)
         {
           this->etiquettesScoresPseudo[i]->rendreVisible();
           this->etiquettesScoresEmis[i]->rendreVisible();
           this->etiquettesScoresRecu[i]->rendreVisible();
           std::stringstream flux;
-          this->etiquettesScoresPseudo[i]->modifierTexte(this->personnages[i]->pseudo());
-          flux << this->personnages[i]->emis();
+          this->etiquettesScoresPseudo[i]->modifierTexte(this->players[i]->pseudo());
+          flux << this->players[i]->emis();
           this->etiquettesScoresEmis[i]->modifierTexte(flux.str());
           flux.str("");
-          flux << this->personnages[i]->recu();
+          flux << this->players[i]->recu();
           this->etiquettesScoresRecu[i]->modifierTexte(flux.str());
         }
         // Dessin de l'overlay
@@ -218,7 +218,7 @@ void Scene::executer()
     */
   }
   // On se déconnecte
-  this->clientUDP->envoyer("DECONNEXION");
+  this->clientUDP->send("DECONNEXION");
 }
 
 void Scene::animer(void)
@@ -228,23 +228,23 @@ void Scene::animer(void)
   {
     float16 positionX = 0, positionY = 0, positionZ = 0;
     // Positionne le personnage sur le sol
-    if (this->personnages[this->numeroJoueur]->lirePositionX() < 0) {
+    if (this->players[this->numeroJoueur]->lirePositionX() < 0) {
       positionX = 0;
     }
-    if (this->personnages[this->numeroJoueur]->lirePositionY() < 0) {
+    if (this->players[this->numeroJoueur]->lirePositionY() < 0) {
       positionY = 0;
     }
 
-    if (this->personnages[this->numeroJoueur]->lirePositionX() > this->heightmap->w - 2) {
+    if (this->players[this->numeroJoueur]->lirePositionX() > this->heightmap->w - 2) {
       positionX = this->heightmap->w - 2;
     }
 
-    if (this->personnages[this->numeroJoueur]->lirePositionY() > this->heightmap->h - 1) {
+    if (this->players[this->numeroJoueur]->lirePositionY() > this->heightmap->h - 1) {
       positionY = this->heightmap->h - 1;
     }
 
-    float16 x = this->personnages[this->numeroJoueur]->lirePositionX();
-    float16 y = this->personnages[this->numeroJoueur]->lirePositionY();
+    float16 x = this->players[this->numeroJoueur]->lirePositionX();
+    float16 y = this->players[this->numeroJoueur]->lirePositionY();
     float16 a = (((float16) (getpixel(this->heightmap, x, y) & 0xff)) / this->atenuation);
     float16 b = (((float16) (getpixel(this->heightmap, x + 1, y )& 0xff)) / this->atenuation);
     float16 c = (((float16) (getpixel(this->heightmap, x, y + 1) & 0xff)) / this->atenuation);
@@ -255,7 +255,7 @@ void Scene::animer(void)
 
     positionZ = g;
 
-    this->personnages[numeroJoueur]->positionner(
+    this->players[numeroJoueur]->set_position(
       positionX,
       positionY,
       positionZ
@@ -328,18 +328,18 @@ void Scene::animer(void)
 
   if (touches[SDL_GetScancodeFromKey(SDLK_UP)])
   {
-    this->personnages[this->numeroJoueur]->goUp();
+    this->players[this->numeroJoueur]->go_up();
   }
   else if (touches[SDL_GetScancodeFromKey(SDLK_DOWN)])
   {
-    this->personnages[this->numeroJoueur]->goDown();
+    this->players[this->numeroJoueur]->go_down();
   }
 
   delete[] touches;
 
   /*
   // Si on est en mode reapparition
-  if (this->personnages[this->numeroJoueur]->heureReapparition() > this->heureActuelle)
+  if (this->players[this->numeroJoueur]->heureReapparition() > this->heureActuelle)
   {
     // Le menu de reapparition sera affiche
     this->fontProchaineApparition->rendreVisible();
@@ -347,7 +347,7 @@ void Scene::animer(void)
 
     // Mise a jour du message de reapparition
     std::stringstream message;
-    sint32 secondesRestantes = (this->personnages[this->numeroJoueur]->heureReapparition() - this->heureActuelle) / 1000;
+    sint32 secondesRestantes = (this->players[this->numeroJoueur]->heureReapparition() - this->heureActuelle) / 1000;
     message << "Prochaine apparition dans " << secondesRestantes << " seconde" << ((secondesRestantes >= 2) ? "s" : "") << ".";
     this->etiquetteProchaineApparition->modifierTexte(message.str());
   }
@@ -361,7 +361,7 @@ void Scene::animer(void)
 
   // Si un deplacement est demande et qu'on n'est pas en mode "reapparition"
   // TODO : Un mort ne doit pas pouvoir tirer avant l'heure de sa reaparition
-  if (deplacement/* && this->personnages[this->numeroJoueur]->heureReapparition() < this->heureActuelle*/)
+  if (deplacement/* && this->players[this->numeroJoueur]->heureReapparition() < this->heureActuelle*/)
   {
     // Calcule de la distance a parcourir
     float16 distance = (float) tempsDernierPas * VITESSE_DEPLACEMENT / 1000.0f;
@@ -380,39 +380,39 @@ void Scene::animer(void)
     {
       // Recuperation de l'environnement
       sint32 positionCarteX = 0, positionCarteY = 0, positionCarteZ = 0;
-      this->personnages[this->numeroJoueur]->positionSurLaCarte(&positionCarteX, &positionCarteY, &positionCarteZ);
+      this->players[this->numeroJoueur]->set_position(&positionCarteX, &positionCarteY, &positionCarteZ);
 
       bool8 entouragePersonnage[8] = {0};
       this->carte->entourage(positionCarteX, positionCarteY, entouragePersonnage);
 
       // Deplacement du personnage dans la direction demande
-      this->personnages[this->numeroJoueur]->deplacer(TAILLE_MINI_DISTANCE, direction, entouragePersonnage);
+      this->players[this->numeroJoueur]->move(TAILLE_MINI_DISTANCE, direction, entouragePersonnage);
     }
 
     // Pour la distance restante
 
     // Recuperation de l'environnement
     sint32 positionCarteX = 0, positionCarteY = 0, positionCarteZ = 0;
-    this->personnages[this->numeroJoueur]->positionSurLaCarte(&positionCarteX, &positionCarteY, &positionCarteZ);
+    this->players[this->numeroJoueur]->set_position(&positionCarteX, &positionCarteY, &positionCarteZ);
 
     bool8 entouragePersonnage[8] = {0};
     this->carte->entourage(positionCarteX, positionCarteY, entouragePersonnage);
 
     // Deplacement du personnage dans la direction demande
-    this->personnages[this->numeroJoueur]->deplacer(distanceRestante, direction, entouragePersonnage);
+    this->players[this->numeroJoueur]->move(distanceRestante, direction, entouragePersonnage);
     */
 
     // SANS GERER LES LAGS
 
-    float16 positionCarteX = 0, positionCarteY = 0, positionCarteZ = 0;
-    this->personnages[this->numeroJoueur]->positionSurLaCarte(&positionCarteX, &positionCarteY, &positionCarteZ);
+    float16 x = 0, y = 0, z = 0;
+    this->players[this->numeroJoueur]->get_position(&x, &y, &z);
 
     bool8 entouragePersonnage[8] = {0};
-    this->carte->entourage(positionCarteX, positionCarteY, entouragePersonnage);
+    this->carte->entourage(x, y, entouragePersonnage);
 
-    float16 hauteurHeightmap = this->heightmap->lireHauteur(positionCarteX, positionCarteY);
+    float16 hauteurHeightmap = this->heightmap->get_height(x, y);
 
-    this->personnages[this->numeroJoueur]->deplacer(distance, direction, entouragePersonnage, hauteurHeightmap);
+    this->players[this->numeroJoueur]->move(distance, direction, entouragePersonnage, hauteurHeightmap);
   }
 
   // Envoi de la position au serveur toutes les 50 ms en moyenne
@@ -426,18 +426,18 @@ void Scene::animer(void)
 
     message << "POSITION_JOUEUR ";
     message << this->heureActuelle << " ";
-    message << this->personnages[this->numeroJoueur]->lirePositionX() << " "; // composante x
-    message << this->personnages[this->numeroJoueur]->lirePositionY() << " "; // composante y
-    message << this->personnages[this->numeroJoueur]->lirePositionZ() << " "; // composante z
-    message << this->personnages[this->numeroJoueur]->lireAngleHorizontal() << " "; // angle horizontal
-    message << this->personnages[this->numeroJoueur]->lireAngleVertical() << " "; // angle horizontal
+    message << this->players[this->numeroJoueur]->get_x() << " "; // composante x
+    message << this->players[this->numeroJoueur]->get_y() << " "; // composante y
+    message << this->players[this->numeroJoueur]->get_z() << " "; // composante z
+    message << this->players[this->numeroJoueur]->get_horizontal_angle() << " "; // angle horizontal
+    message << this->players[this->numeroJoueur]->get_vertical_angle() << " "; // angle horizontal
 
-    this->clientUDP->envoyer(message.str());
+    this->clientUDP->send(message.str());
   }
 
 
   // Si on recoit un message
-  std::string message = this->clientUDP->recevoir();
+  std::string message = this->clientUDP->receive();
   std::string entete = decapsuler(&message);
 
   if (entete == "POSITION_JOUEUR")
@@ -452,13 +452,13 @@ void Scene::animer(void)
     float16 angleVertical = stringEnFloat16(decapsuler(&message));
 
     /*
-    this->personnages[numeroJoueur]->positionner(
+    this->players[numeroJoueur]->set_position(
       positionX,
       positionY,
       positionZ
     );
 
-    this->personnages[numeroJoueur]->orienter(angleHorizontal, angleVertical);
+    this->players[numeroJoueur]->set_direction(angleHorizontal, angleVertical);
     */
   }
   /*
@@ -467,15 +467,15 @@ void Scene::animer(void)
   {
     sint32 heure = stringEnSint32(decapsuler(&message));
 
-    // Remplissage de l'historique des personnages
-    for(uint32 i = 0; i < this->personnages.size(); i++)
+    // Remplissage de l'historique des players
+    for(uint32 i = 0; i < this->players.size(); i++)
     {
       float16 positionX = stringEnFloat16(decapsuler(&message));
       float16 positionY = stringEnFloat16(decapsuler(&message));
       float16 positionZ = stringEnFloat16(decapsuler(&message));
       float16 angleHorizontal = stringEnFloat16(decapsuler(&message));
 
-      this->personnages[i]->ajouterPosition(
+      this->players[i]->ajouterPosition(
         heure,
         positionX,
         positionY,
@@ -496,9 +496,10 @@ void Scene::animer(void)
     sint32 positionZReapparition = stringEnSint32(decapsuler(&message));
     float16 angleHorizontalReapparition = stringEnFloat16(decapsuler(&message));
 
+    /*
     // Ajout du point de reapparition a l'historique du personnage (deux fois pour eviter l'extrapolation au moment de la reapparition)
     // 100 ms plus tot car on affiche ce qu'il y avait dans l'historique 100 ms plus tot
-    this->personnages[numeroDuJoueur]->ajouterPosition(
+    this->players[numeroDuJoueur]->ajouterPosition(
       heureReapparition - 101,
       positionXReapparition + 0.5,
       positionYReapparition + 0.5,
@@ -507,7 +508,7 @@ void Scene::animer(void)
       0
     );
 
-    this->personnages[numeroDuJoueur]->ajouterPosition(
+    this->players[numeroDuJoueur]->ajouterPosition(
       heureReapparition - 100,
       positionXReapparition + 0.5,
       positionYReapparition + 0.5,
@@ -515,30 +516,31 @@ void Scene::animer(void)
       angleHorizontalReapparition,
       0
     );
+    */
 
     // Passe le personnage en mode "reapparition"
-    this->personnages[numeroDuJoueur]->heureReapparition(heureReapparition);
+    this->players[numeroDuJoueur]->set_reapparition_angle(heureReapparition);
     Point3Float pointReapparition = { positionXReapparition, positionYReapparition, positionZReapparition };
 
     // Si c'est notre personnage qui est en mode reapparition
     if (this->numeroJoueur == numeroDuJoueur)
     {
       // Repositionne notre personnage au point impose
-      this->personnages[numeroDuJoueur]->positionner(pointReapparition.x + 0.5, pointReapparition.y + 0.5, pointReapparition.z + 0.5);
-      this->personnages[numeroDuJoueur]->orienter(angleHorizontalReapparition, 0);
+      this->players[numeroDuJoueur]->set_position(pointReapparition.x + 0.5, pointReapparition.y + 0.5, pointReapparition.z + 0.5);
+      this->players[numeroDuJoueur]->set_direction(angleHorizontalReapparition, 0);
     }
 
-    //this->personnages[numeroDuJoueur]->afficherHistorique();
+    //this->players[numeroDuJoueur]->afficherHistorique();
     // TODO : ATTENTION : penser a interdire de tuer un joueur en mode "reapparition"
   }
 
-  // Positionne les personnages a l'endroit ou ils sont a t-100ms
-  for(uint32 i = 0; i < this->personnages.size(); i++)
+  // Positionne les players a l'endroit ou ils sont a t-100ms
+  for(uint32 i = 0; i < this->players.size(); i++)
   {
-    // Autres personnages
+    // Autres players
     if (i != numeroJoueur)
     {
-      this->personnages[i]->positionnerDepuisLHistorique(this->heureActuelle - 100);
+      //this->players[i]->set_positionDepuisLHistorique(this->heureActuelle - 100);
     }
   }
 }
@@ -573,7 +575,7 @@ void Scene::dessiner(void)
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
-  this->personnages[this->numeroJoueur]->regarder();
+  this->players[this->numeroJoueur]->look();
 
   // Dessin de la skybox
   this->skybox->dessiner();
@@ -582,18 +584,18 @@ void Scene::dessiner(void)
   this->carte->dessiner();
 
   // Dessin de la heightmap
-  this->heightmap->dessiner();
+  this->heightmap->draw();
 
-  // Dessin des autres personnages
-  for(uint32 i = 0; i < this->personnages.size(); i++)
+  // Dessin des autres players
+  for(uint32 i = 0; i < this->players.size(); i++)
   {
     if (i != this->numeroJoueur)
     {
-      // TODO : Ne pas afficher les personnages en reapparition, idem pour le test du tir cote serveur
+      // TODO : Ne pas afficher les players en reapparition, idem pour le test du tir cote serveur
       // Si le personnage n'est plus en mode "reapparition"
-      if (this->heureActuelle > this->personnages[i]->heureReapparition())
+      if (this->heureActuelle > this->players[i]->get_reapparition_time())
       {
-        this->personnages[i]->dessiner();
+        this->players[i]->dessiner();
       }
     }
   }
@@ -619,8 +621,8 @@ void Scene::gererEvenements(void)
 
         case SDL_MOUSEMOTION:
           // Tourne le personnage selon le deplacement de la souris
-          this->personnages[this->numeroJoueur]->tournerHorizontalement(-evenement.motion.xrel * 0.06);
-          this->personnages[this->numeroJoueur]->tournerVerticalement(-evenement.motion.yrel * 0.06);
+          this->players[this->numeroJoueur]->horizontal_turn(-evenement.motion.xrel * 0.06);
+          this->players[this->numeroJoueur]->vertical_turn(-evenement.motion.yrel * 0.06);
 
           // Si la souris s'ecarte de plus de 10 px du centre de la fenetre
           if ( abs(evenement.motion.x - (this->largeurFenetre / 2)) > 10
@@ -656,11 +658,11 @@ void Scene::gererEvenements(void)
           break;
 
         case SDL_MOUSEBUTTONDOWN:
-          if (this->personnages[numeroJoueur]->heureReapparition() < this->heureActuelle)
+          if (this->players[numeroJoueur]->get_reapparition_time() < this->heureActuelle)
           {
             std::stringstream message;
             message << "TIR " << sint32EnString(this->heureActuelle);
-            this->clientUDP->envoyer(message.str());
+            this->clientUDP->send(message.str());
           }
           break;
       }
@@ -671,7 +673,7 @@ void Scene::gererEvenements(void)
   }
 }
 
-void Scene::clientUDPAUtiliser(ClientUDP* clientUDP)
+void Scene::clientUDPAUtiliser(UDPClient* clientUDP)
 {
   this->clientUDP = clientUDP;
 }
@@ -686,15 +688,15 @@ void Scene::creerPersonnage()
   // Lecture de l'heure actuelle pour determiner l'heure de la premiere apparition
   sint32 heureActuelle = this->horloge.heure();
 
-  this->clientUDP->envoyer("DEMANDE_POSITION_JOUEUR");
+  this->clientUDP->send("DEMANDE_POSITION_JOUEUR");
 
   // Ajout de notre personnage (position temporaire si le joueur s'est deja connecte)
-  this->personnages.push_back(new Personnage(40.0, 40.0, 0.55, -45.0, 0, 0.3, "raphael.m3s"));
+  this->players.push_back(new Player(40.0, 40.0, 0.55, -45.0, 0, 0.3, "raphael.m3s"));
 
   // Le personnage est immediatement plonge dans le mode "reapparition"
   // pendant 5 secondes, le temps d'obtenir des reponses du serveur (position réelle du personnage, la map...)
 
-  //this->personnages[this->numeroJoueur]->heureReapparition(heureActuelle + 5000);
+  //this->players[this->numeroJoueur]->heureReapparition(heureActuelle + 5000);
 }
 
 void Scene::reglerNumeroJoueur(uint32 numeroJoueur)
@@ -754,10 +756,10 @@ void Scene::creerTableauScores(uint32 nbJoueurs)
 void Scene::reglerPseudosJoueurs(std::vector<std::string> listePseudosJoueurs)
 {
   // Pour chaque joueur
-  for(uint32 i = 0; i < this->personnages.size(); i++)
+  for(uint32 i = 0; i < this->players.size(); i++)
   {
     // Mise en place du pseudo
-    this->personnages[i]->pseudo(listePseudosJoueurs[i]);
+    this->players[i]->pseudo(listePseudosJoueurs[i]);
   }
 }
 */

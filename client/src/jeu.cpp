@@ -15,7 +15,7 @@
 #include "scene.h"
 #include "init.h"
 #include "configuration.h"
-#include "clientUDP.h"
+#include "udpClient.h"
 #include "horloge.h"
 #include "fonctionsUtiles.h"
 #include "fichierINI.h"
@@ -98,9 +98,11 @@ bool8 Jeu::executer(void)
   Bouton boutonQuitter(this->fenetre, this->largeurFenetre / 2, 400, "Quitter");
   menuPrincipal.ajouter(&boutonQuitter);
 
-  menuPrincipal.dessiner();
+  //menuPrincipal.dessiner();
 
   while (TRUE) {
+    menuPrincipal.dessiner();
+
     // Si la case a change d'etat
     if (pleinEcranCoche != casePleinEcran.cochee())
     {
@@ -132,8 +134,10 @@ bool8 Jeu::executer(void)
       Bouton boutonRetour(this->fenetre, this->largeurFenetre / 2, 400, "Retour");
       menuConnexion.ajouter(&boutonRetour);
 
+      //menuConnexion.dessiner();
+
       // On initialise le client UDP
-      ClientUDP clientUdp;
+      UDPClient clientUdp;
       clientUdp.connect(zoneTexteServeur.texte(), 2712);
 
       // On initalise l'horloge
@@ -161,12 +165,11 @@ bool8 Jeu::executer(void)
         }
 
         // On demande la liste des joueurs
-        clientUdp.envoyer("DEMANDE_JOUEURS");
+        //clientUdp.envoyer("DEMANDE_JOUEURS");
 
         while(TRUE)
         {
-
-          /*
+          menuConnexion.dessiner();
           // On rafraichit la liste des joueurs connectés
           static sint32 heureDernierEnvoi = horlogeSynchronisee.heure() - DUREE_ENTRE_DEMANDE_JOUEURS;
 
@@ -175,11 +178,10 @@ bool8 Jeu::executer(void)
             heureDernierEnvoi = horlogeSynchronisee.heure();
 
             // On demande la liste des joueurs
-            clientUdp.envoyer("DEMANDE_JOUEURS");
+            clientUdp.send("DEMANDE_JOUEURS");
           }
-          */
 
-          std::string messageRecu = clientUdp.recevoir();
+          std::string messageRecu = clientUdp.receive();
 
           // Si on a recu un message
           if(messageRecu != "")
@@ -225,12 +227,12 @@ bool8 Jeu::executer(void)
           if (boutonSeConnecter.clique())
           {
             // On se connecte
-            clientUdp.envoyer("CONNEXION " + pseudo);
+            clientUdp.send("CONNEXION " + pseudo);
 
             SDL_RaiseWindow(this->fenetre);
 
             // On joue
-            initOpenGL();
+            init_openGL();
             Scene scene(this->fenetre);
             scene.reglerHorloge(horlogeSynchronisee.heure());
             scene.clientUDPAUtiliser(&clientUdp);
@@ -245,14 +247,12 @@ bool8 Jeu::executer(void)
           {
             break;
           }
-          menuConnexion.dessiner();
         }
       }
 
       // Force le menu a etre redessine
-      //menuPrincipal.dessiner(TRUE);
+      menuPrincipal.dessiner(TRUE);
     }
-    menuPrincipal.dessiner();
   }
 
   // Destruction de la fenetre
@@ -319,7 +319,7 @@ bool8 Jeu::creerFenetreOpenGL(void)
   {
     printf( "Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError() );
   }
-  std::cerr << "Version OpenGL " << glGetString(GL_VERSION) << std::endl;
+  //std::cerr << "Version OpenGL " << glGetString(GL_VERSION) << std::endl;
   return TRUE;
 }
 

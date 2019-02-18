@@ -18,18 +18,18 @@
 class Heightmap
 {
   private:
-    ConteneurTextures conteneurTextures;
-    std::vector<std::vector<float16> > hauteurs;
+    ConteneurTextures textures_container;
+    std::vector<std::vector<float16> > heights;
     SDL_Surface* heightmap;
-    uint32 hauteur;
-    uint32 largeur;
+    uint32 height;
+    uint32 width;
     float16 atenuation;
 
   public:
-    Heightmap(const char* nomFichier);
+    Heightmap(const char* file);
     ~Heightmap();
-    void dessiner();
-    float16 lireHauteur(float16 x, float16 y);
+    void draw();
+    float16 get_height(float16 x, float16 y);
 };
 
 #endif // HEIGHTMAP_H_INCLUDED

@@ -24,13 +24,12 @@ class Objet3DStatique
     GLuint listeRST;
 
   protected:
-    // Position de l'objet
-    float16 positionX;
-    float16 positionY;
-    float16 positionZ;
+    float16 x;
+    float16 y;
+    float16 z;
 
     // Angle horizontal avec la verticale en z
-    float16 angleHorizontal;
+    float16 horizontal_angle;
 
     std::string nom;
 

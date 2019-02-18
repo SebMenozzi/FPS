@@ -70,7 +70,7 @@ std::string sint32EnString(sint32 valeur)
   return chaine;
 }
 
-Uint32 getpixel(SDL_Surface *surface, int x, int y)
+Uint32 get_pixel(SDL_Surface *surface, int x, int y)
 {
   int bpp = surface->format->BytesPerPixel;
   /* Here p is the address to the pixel we want to retrieve */

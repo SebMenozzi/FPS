@@ -1,5 +1,5 @@
-#ifndef CLIENTUDP_H_INCLUDED
-#define CLIENTUDP_H_INCLUDED
+#ifndef UDPCLIENT_H_INCLUDED
+#define UDPCLIENT_H_INCLUDED
 
 #if defined(__WIN32__)
   #include <winsock2.h>
@@ -19,19 +19,19 @@
 #include "types.h"
 #include <string>
 
-#define TAILLE_MAX_MESSAGE 65507
+#define MAX_SIZE_MESSAGE 65507
 
-class ClientUDP
+class UDPClient
 {
   private:
-    SOCKADDR_IN adresseServeur;
-    int socketUdp;
+    SOCKADDR_IN serverAddress;
+    int udpSocket;
 
   public:
-    ClientUDP();
-    void connect(std::string ipServeur, uint16 portServeur);
-    std::string recevoir();
-    void envoyer(std::string message);
+    UDPClient();
+    void connect(std::string ip, uint16 port);
+    std::string receive();
+    void send(std::string message);
 };
 
-#endif // CLIENTUDP_H_INCLUDED
+#endif // UDPCLIENT_H_INCLUDED

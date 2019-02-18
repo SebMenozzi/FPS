@@ -16,9 +16,9 @@
 #include "objet3DStatique.h"
 #include "carte.h"
 #include "heightmap.h"
-#include "personnage.h"
+#include "player.h"
 #include "horloge.h"
-#include "clientUDP.h"
+#include "udpClient.h"
 #include "gui/overlay.h"
 #include "gui/imageOverlay.h"
 #include "gui/etiquetteOverlay.h"
@@ -32,7 +32,7 @@ class Scene
     int hauteurFenetre;
 
     Horloge horloge;
-    ClientUDP* clientUDP;
+    UDPClient* clientUDP;
 
     bool8 continuer;
     uint32 tempsDernierPas;
@@ -52,7 +52,7 @@ class Scene
     void dessiner2D(void);
 
     //Personnage* personnage;
-    std::vector<Personnage*> personnages;
+    std::vector<Player*> players;
     uint32 numeroJoueur;
 
     sint32 heureFinPartie;
@@ -74,7 +74,7 @@ class Scene
     Scene(SDL_Window* fenetre);
     ~Scene();
     void executer();
-    void clientUDPAUtiliser(ClientUDP* clientUDP);
+    void clientUDPAUtiliser(UDPClient* clientUDP);
     void reglerHorloge(sint32 heure);
     void creerPersonnage();
     void reglerNumeroJoueur(uint32 numeroJoueur);
