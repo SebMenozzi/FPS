@@ -29,7 +29,7 @@ class Heightmap
     Heightmap(const char* file);
     ~Heightmap();
     void draw();
-    float16 get_height(float16 x, float16 y);
+    float16 getHeight(float16 x, float16 y);
 };
 
 #endif // HEIGHTMAP_H_INCLUDED

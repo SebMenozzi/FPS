@@ -75,7 +75,7 @@ void Heightmap::draw()
   }
 }
 
-float16 Heightmap::get_height(float16 x, float16 y)
+float16 Heightmap::getHeight(float16 x, float16 y)
 {
   // algo de Seb
 

@@ -21,32 +21,32 @@ Materiau::Materiau()
   this->_map_Kd = "";
 }
 
-Couleur3Float Materiau::Ka()
+Color3Float Materiau::Ka()
 {
   return this->_Ka;
 }
 
-void Materiau::Ka(Couleur3Float Ka)
+void Materiau::Ka(Color3Float Ka)
 {
   this->_Ka = Ka;
 }
 
-Couleur3Float Materiau::Kd()
+Color3Float Materiau::Kd()
 {
   return this->_Kd;
 }
 
-void Materiau::Kd(Couleur3Float Kd)
+void Materiau::Kd(Color3Float Kd)
 {
   this->_Kd = Kd;
 }
 
-Couleur3Float Materiau::Ks()
+Color3Float Materiau::Ks()
 {
   return this->_Ks;
 }
 
-void Materiau::Ks(Couleur3Float Ks)
+void Materiau::Ks(Color3Float Ks)
 {
   this->_Ks = Ks;
 }

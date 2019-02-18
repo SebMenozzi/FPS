@@ -9,6 +9,7 @@ typedef unsigned long uint32;
 typedef signed long sint32;
 
 typedef unsigned char bool8;
+
 #define TRUE 1
 #define FALSE 0
 

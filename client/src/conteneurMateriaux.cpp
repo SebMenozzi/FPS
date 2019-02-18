@@ -70,7 +70,7 @@ void ConteneurMateriaux::ajouterBibliotheque(std::string cheminBibliotheque)
     {
       // Creation d'un flux d'extraction
       std::istringstream flux(parametres);
-      Couleur3Float couleurDiffuse;
+      Color3Float couleurDiffuse;
       flux >> couleurDiffuse.r;
       flux >> couleurDiffuse.v;
       flux >> couleurDiffuse.b;
@@ -80,7 +80,7 @@ void ConteneurMateriaux::ajouterBibliotheque(std::string cheminBibliotheque)
     {
       // Creation d'un flux d'extraction
       std::istringstream flux(parametres);
-      Couleur3Float couleurSpeculaire;
+      Color3Float couleurSpeculaire;
       flux >> couleurSpeculaire.r;
       flux >> couleurSpeculaire.v;
       flux >> couleurSpeculaire.b;
@@ -90,7 +90,7 @@ void ConteneurMateriaux::ajouterBibliotheque(std::string cheminBibliotheque)
     {
       // Creation d'un flux d'extraction
       std::istringstream flux(parametres);
-      Couleur3Float couleurAmbiante;
+      Color3Float couleurAmbiante;
       flux >> couleurAmbiante.r;
       flux >> couleurAmbiante.v;
       flux >> couleurAmbiante.b;

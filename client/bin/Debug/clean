@@ -1,5 +1,0 @@
-#!/bin/sh
-# make
-cd ../../
-make fclean
-cd bin/Debug

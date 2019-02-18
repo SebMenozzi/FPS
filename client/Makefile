@@ -2,12 +2,12 @@
 .SUFFIXES :
 
 NAME = client
-SRC =	src/gui/bouton.cpp src/gui/caseACocher.cpp src/carte.cpp src/gui/champSaisieNumerique.cpp \
-	src/conteneurTextures.cpp src/gui/etiquette.cpp src/gui/etiquetteOverlay.cpp      \
-	src/fonctionsUtiles.cpp src/historiqueDesPositions.cpp src/horloge.cpp    \
+SRC =	src/gui/button.cpp src/gui/checkbox.cpp src/map.cpp src/gui/numericInput.cpp \
+	src/conteneurTextures.cpp src/gui/label.cpp src/gui/etiquetteOverlay.cpp      \
+	src/fonctionsUtiles.cpp src/historiqueDesPositions.cpp src/clock.cpp    \
 	src/gui/imageOverlay.cpp src/init.cpp src/main.cpp src/gui/menu.cpp src/objet3DStatique.cpp   \
 	src/gui/overlay.cpp src/player.cpp src/scene.cpp src/udpClient.cpp src/gui/widget.cpp    \
-	src/gui/widgetOverlay.cpp src/gui/zoneTexte.cpp src/jeu.cpp src/fichierINI.cpp src/objet3D.cpp \
+	src/gui/widgetOverlay.cpp src/gui/textInput.cpp src/game.cpp src/iniFile.cpp src/objet3D.cpp \
 	src/traitementChemin.cpp src/conteneurMateriaux.cpp src/materiau.cpp \
 	src/heightmap.cpp
 
@@ -26,9 +26,9 @@ endif
 
 COMPILER_FLAGS = -w
 
-all : bin/Debug/$(NAME)
+all : $(NAME)
 
-bin/Debug/$(NAME) : $(OBJ)
+$(NAME) : $(OBJ)
 	$(CC) $(OBJ) $(COMPILER_FLAGS) $(LINKER_FLAGS) -o $@
 
 %.o : %.cpp
@@ -38,6 +38,6 @@ clean :
 	rm -f $(OBJ)
 
 fclean : clean
-	rm -f  bin/Debug/$(NAME)
+	rm -f  $(NAME)
 
 re : fclean all

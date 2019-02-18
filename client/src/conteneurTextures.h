@@ -11,6 +11,7 @@
   #include <GL/glu.h>
 #endif
 #include <string>
+#include "fonctionsUtiles.h"
 
 class ConteneurTextures
 {
@@ -28,7 +29,7 @@ class ConteneurTextures
     typedef std::map<std::string, Texture> Textures;
 
     static Textures textures;
-    void chargerTexture(const char* nomFichier, GLuint* texture, sint32* largeur, sint32* hauteur);
+    void chargerTexture(std::string nomFichier, GLuint* texture, sint32* largeur, sint32* hauteur);
 
   public:
     Texture ajouter(std::string nomFichier);

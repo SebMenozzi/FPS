@@ -7,7 +7,7 @@ Objet3DStatique::Objet3DStatique(std::string nomFichier)
   this->x = 0.0;
   this->y = 0.0;
   this->z = 0.0;
-  this->horizontal_angle = 0.0;
+  this->horizontalAngle = 0.0;
 
   bool8 creationListeAffichage = FALSE;
   std::string textureCourante;
@@ -166,7 +166,7 @@ void Objet3DStatique::dessiner()
     // Positionne l'objet en lieu de dessin
     // Atention, la position X 2D devient la position Y 3D et inversement
     glTranslatef(this->y, this->x, 0.0);
-    glRotated(this->horizontal_angle, 0.0, 0.0, 1.0);
+    glRotated(this->horizontalAngle, 0.0, 0.0, 1.0);
 
     // Correction / Adaptation de l'objet a la scene
     glCallList(this->listeRST);

@@ -4,32 +4,12 @@
 
 UDPClient::UDPClient()
 {
-  static bool8 networkInitialized = FALSE;
-
-  // if the network hasn't been initialized
-  if (networkInitialized == FALSE)
-  {
-    #ifdef __WIN32__
-      // Initialization of the network
-      WSADATA WSAData;
-      WSAStartup(MAKEWORD(2,0), &WSAData);
-    #endif
-
-    networkInitialized = TRUE;
-  }
-
   printf("Creation of UDP Client...\n");
 
   // Socket
   this->udpSocket = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
-  // Non-blocking socket
-  #ifdef __WIN32__
-    uint32 arg = 1;
-    ioctlsocket (this->udpSocket, FIONBIO, &arg);
-  #else
-      fcntl (this->udpSocket, F_SETFL, fcntl (this->udpSocket, F_GETFL) | O_NONBLOCK);
-  #endif
+  fcntl (this->udpSocket, F_SETFL, fcntl (this->udpSocket, F_GETFL) | O_NONBLOCK);
 
   printf("UDP CLient has been successfully created!\n");
 }
@@ -74,6 +54,8 @@ void UDPClient::send(std::string message)
 {
   // if we are connected
   if(this->serverAddress.sin_addr.s_addr != 0) {
+    printf("Sending the message %s\n", message.c_str());
+
     // Sending
     if(sendto(this->udpSocket, message.c_str(), message.length() + 1, 0, (sockaddr*) &this->serverAddress, sizeof(this->serverAddress)) == -1) {
       printf("An error happened while sending the message!\n");

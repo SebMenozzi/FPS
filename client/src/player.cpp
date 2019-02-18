@@ -5,17 +5,17 @@
   #define INT_MIN ((int)0x80000000)
 #endif
 
-Player::Player(float16 x, float16 y, float16 z, float16 horizontal_angle, float16 vertical_angle, float16 radius, std::string file) : Objet3DStatique(file)
+Player::Player(float16 x, float16 y, float16 z, float16 horizontalAngle, float16 verticalAngle, float16 radius, std::string file) : Objet3DStatique(file)
 {
   this->x = x;
   this->y = y;
   this->z = z;
-  this->horizontal_angle = horizontal_angle; // En degrès, sens trigo vue de +Z vers -Z (du dessus) [-3600.0 .. +3600.0[
-  this->vertical_angle = vertical_angle; // En degrès ; 0 = horizon ; > 0 = vers le ciel ; < 0 = vers les sol [-45 .. +45]
+  this->horizontalAngle = horizontalAngle; // En degrès, sens trigo vue de +Z vers -Z (du dessus) [-3600.0 .. +3600.0[
+  this->verticalAngle = verticalAngle; // En degrès ; 0 = horizon ; > 0 = vers le ciel ; < 0 = vers les sol [-45 .. +45]
   this->radius = radius;
-  this->reapparition_time = INT_MIN;
-  this->winning_shots_count = 0;
-  this->received_shots_count = 0;
+  this->reapparitionTime = INT_MIN;
+  this->winningShotsCount = 0;
+  this->receivedShotsCount = 0;
   this->username = "";
 
   //this->objet3D = new Objet3D(file);
@@ -26,7 +26,7 @@ Player::~Player(void)
   //delete this->objet3D;
 }
 
-void Player::move(float16 distance, float16 direction, bool8 entourage[8], float16 heightmap_height)
+void Player::move(float16 distance, float16 direction, bool8 entourage[8], float16 heightmapHeight)
 {
   const float EPSILON = 0.001f;
 
@@ -54,14 +54,14 @@ void Player::move(float16 distance, float16 direction, bool8 entourage[8], float
   }
   */
 
-  direction += this->horizontal_angle;
+  direction += this->horizontalAngle;
 
   // On evite que l'azimut du Player approche un multiple de 90
   // Cela evite des soucis lors de la gestion des collisions
   const float MODULO = 90.0f;
   float reste = fmod(direction, MODULO);
 
-  if (this->horizontal_angle >= 0.0f) {  // Angle positif ou nul
+  if (this->horizontalAngle >= 0.0f) {  // Angle positif ou nul
     if (reste < EPSILON) { // 0+
       direction += EPSILON;
     } else if (reste > MODULO - EPSILON) { // 90-
@@ -77,12 +77,12 @@ void Player::move(float16 distance, float16 direction, bool8 entourage[8], float
   }
 
   // Calcule de la position cible du Player
-  float16 target_x = this->x - distance * sin(direction * M_PI / 180.0);
-  float16 target_y = this->y - distance * cos(direction * M_PI / 180.0);
+  float16 targetX = this->x - distance * sin(direction * M_PI / 180.0);
+  float16 targetY = this->y - distance * cos(direction * M_PI / 180.0);
 
-  this->x = target_x;
-  this->y = target_y;
-  this->z = heightmap_height;
+  this->x = targetX;
+  this->y = targetY;
+  this->z = heightmapHeight;
 
   /*
 
@@ -90,165 +90,165 @@ void Player::move(float16 distance, float16 direction, bool8 entourage[8], float
 
   // S'il y a un mur a l'Est
   // et que la droite du Player arrive dans le mur
-  if( (1 == entourage[4]) && ceil(target_x + this->radius) != ceil(this->x) )
+  if( (1 == entourage[4]) && ceil(targetX + this->radius) != ceil(this->x) )
   {
     // On rectifie la translation en Y (3D)
-    target_x -= (target_x + this->radius) - (sint32)(target_x + this->radius);
+    targetX -= (targetX + this->radius) - (sint32)(targetX + this->radius);
   }
 
   // GESTION DES COLLISIONS AVEC MUR SUD
 
   // S'il y a un mur au Sud et que notre Sud arrive dans le mur
-  if (1 == entourage[6] && ceil(target_y + this->radius) != ceil(this->y))
+  if (1 == entourage[6] && ceil(targetY + this->radius) != ceil(this->y))
   {
     // On rectifie la translation en X (3D)
-    target_y -= (target_y + this->radius) - (sint32)(target_y + this->radius);
+    targetY -= (targetY + this->radius) - (sint32)(targetY + this->radius);
   }
 
   // GESTION DES COLLISIONS AVEC MUR OUEST
 
   // S'il y a un mur a l'Ouest et que notre Ouest arrive dans le mur
-  if (1 == entourage[3] && floor(target_x - this->radius) != floor(this->x))
+  if (1 == entourage[3] && floor(targetX - this->radius) != floor(this->x))
   {
     // On rectifie la translation en Y (3D)
-    target_x -= (target_x - this->radius) - (sint32)(target_x + this->radius);
+    targetX -= (targetX - this->radius) - (sint32)(targetX + this->radius);
   }
 
   // GESTION DES COLLISIONS AVEC MUR AU NORD
 
   // S'il y a un mur au Nord et que notre Nord arrive dans le mur
-  if (1 == entourage[1] && floor(target_y - this->radius) != floor(this->y))
+  if (1 == entourage[1] && floor(targetY - this->radius) != floor(this->y))
   {
     // On rectifie la translation en X (3D)
-    target_y -= (target_y - this->radius) - (sint32)(target_y + this->radius);
+    targetY -= (targetY - this->radius) - (sint32)(targetY + this->radius);
   }
 
 
   // GESTION DES COLLISIONS AVEC MUR AU SUD-EST
-  if (1 == entourage[7] && ceil(target_y + this->radius) != ceil(y) && ceil(target_x + this->radius) != ceil(x))
+  if (1 == entourage[7] && ceil(targetY + this->radius) != ceil(y) && ceil(targetX + this->radius) != ceil(x))
   {
-    if (target_y > this->y && target_x > this->x) // Approche
+    if (targetY > this->y && targetX > this->x) // Approche
     {
       // Evite la division par zero
-      if (((target_x + this->radius) - (sint32)(target_x + this->radius)) == 0.0 || (target_x - this->x) == 0.0)
+      if (((targetX + this->radius) - (sint32)(targetX + this->radius)) == 0.0 || (targetX - this->x) == 0.0)
       {
-        target_x -= (target_x + this->radius) - (sint32)(target_x + this->radius);
+        targetX -= (targetX + this->radius) - (sint32)(targetX + this->radius);
       }
       else
       {
         // Si ce sont les bord en Y qui ont �t� en contact lors de la collision
-        if ( ((target_y + this->radius) - (sint32)(target_y + this->radius)) / ((target_x + this->radius) - (sint32)(target_x + this->radius)) > (target_y - this->y) / (target_x - this->x))
+        if ( ((targetY + this->radius) - (sint32)(targetY + this->radius)) / ((targetX + this->radius) - (sint32)(targetX + this->radius)) > (targetY - this->y) / (targetX - this->x))
         {
-          target_x -= (target_x + this->radius) - (sint32)(target_x + this->radius);
+          targetX -= (targetX + this->radius) - (sint32)(targetX + this->radius);
         }
         else
         {
-          target_y -= (target_y + this->radius) - (sint32)(target_y + this->radius);
+          targetY -= (targetY + this->radius) - (sint32)(targetY + this->radius);
         }
       }
     }
-    else if (target_y < this->y) // Eloigne en X
+    else if (targetY < this->y) // Eloigne en X
     {
-      target_x -= (target_x + this->radius) - (sint32)(target_x + this->radius);
+      targetX -= (targetX + this->radius) - (sint32)(targetX + this->radius);
     }
-    else if (target_x < this->x) // Eloigne en Y
+    else if (targetX < this->x) // Eloigne en Y
     {
-      target_y -= (target_y + this->radius) - (sint32)(target_y + this->radius);
+      targetY -= (targetY + this->radius) - (sint32)(targetY + this->radius);
     }
   }
 
   // GESTION DES COLLISIONS AVEC MUR AU SUD-OUEST
-  if (1 == entourage[5] && ceil(target_y + this->radius) != ceil(y) && floor(target_x - this->radius) != floor(x))
+  if (1 == entourage[5] && ceil(targetY + this->radius) != ceil(y) && floor(targetX - this->radius) != floor(x))
   {
-    if (target_y < this->y) // Eloigne en X
+    if (targetY < this->y) // Eloigne en X
     {
-      target_x += (sint32)((target_x - this->radius) + 1) - (target_x - this->radius);
+      targetX += (sint32)((targetX - this->radius) + 1) - (targetX - this->radius);
     }
-    else if (target_x > this->x) // Eloigne en Y
+    else if (targetX > this->x) // Eloigne en Y
     {
-      target_y -= (target_y + this->radius) - (sint32)(target_y + this->radius);
+      targetY -= (targetY + this->radius) - (sint32)(targetY + this->radius);
     }
-    else if (target_y > this->y && target_x < this->x) // Approche
+    else if (targetY > this->y && targetX < this->x) // Approche
     {
-      if(((sint32)(target_x - this->radius + 1) - (target_x - this->radius)) == 0.0 || (this->x - target_x) == 0.0)
+      if(((sint32)(targetX - this->radius + 1) - (targetX - this->radius)) == 0.0 || (this->x - targetX) == 0.0)
       {
-          target_x += (sint32)((target_x - this->radius) + 1) - (target_x - this->radius);
+          targetX += (sint32)((targetX - this->radius) + 1) - (targetX - this->radius);
       }
       else
       {
         // Si ce sont les bords en Y qui ont �t� en contact lors de la collision
-        if ( ((target_y + this->radius) - (sint32)(target_y + this->radius)) / ((sint32)(target_x - this->radius + 1) - (target_x - this->radius)) > (target_y - this->y) / (this->x - target_x))
+        if ( ((targetY + this->radius) - (sint32)(targetY + this->radius)) / ((sint32)(targetX - this->radius + 1) - (targetX - this->radius)) > (targetY - this->y) / (this->x - targetX))
         {
-          target_x += (sint32)((target_x - this->radius) + 1) - (target_x - this->radius);
+          targetX += (sint32)((targetX - this->radius) + 1) - (targetX - this->radius);
         }
         else
         {
-          target_y -= (target_y + this->radius) - (sint32)(target_y + this->radius);
+          targetY -= (targetY + this->radius) - (sint32)(targetY + this->radius);
         }
       }
     }
   }
 
   // GESTION DES COLLISIONS AVEC MUR AU NORD-OUEST
-  if (1 == entourage[0] && floor(target_y - this->radius) != floor(y) && floor(target_x - this->radius) != floor(x))
+  if (1 == entourage[0] && floor(targetY - this->radius) != floor(y) && floor(targetX - this->radius) != floor(x))
   {
-    if (target_y > this->y) // Eloigne en X
+    if (targetY > this->y) // Eloigne en X
     {
-      target_x += (sint32)((target_x - this->radius) + 1) - (target_x - this->radius);
+      targetX += (sint32)((targetX - this->radius) + 1) - (targetX - this->radius);
     }
-    else if (target_x > this->x) // Eloigne en Y
+    else if (targetX > this->x) // Eloigne en Y
     {
-      target_y += (sint32)((target_y - this->radius) + 1) - (target_y - this->radius);
+      targetY += (sint32)((targetY - this->radius) + 1) - (targetY - this->radius);
     }
-    else if (target_y < this->y && target_x < this->x) // Approche
+    else if (targetY < this->y && targetX < this->x) // Approche
     {
       // Evite la division par zero
-      if (((sint32)((target_x - this->radius) + 1) - (target_x - this->radius)) == 0.0 || (this->x - target_x) == 0.0)
+      if (((sint32)((targetX - this->radius) + 1) - (targetX - this->radius)) == 0.0 || (this->x - targetX) == 0.0)
       {
-        target_x += (sint32)((target_x - this->radius) + 1) - (target_x - this->radius);
+        targetX += (sint32)((targetX - this->radius) + 1) - (targetX - this->radius);
       }
       else
       {
         // Si ce sont les bords en Y qui ont �t� en contact lors de la collision
-        if ( ((sint32)((target_y - this->radius) + 1) - (target_y - this->radius)) / ((sint32)((target_x - this->radius) + 1) - (target_x - this->radius)) > (this->y - target_y) / (this->x - target_x))
+        if ( ((sint32)((targetY - this->radius) + 1) - (targetY - this->radius)) / ((sint32)((targetX - this->radius) + 1) - (targetX - this->radius)) > (this->y - targetY) / (this->x - targetX))
         {
-          target_x += (sint32)((target_x - this->radius) + 1) - (target_x - this->radius);
+          targetX += (sint32)((targetX - this->radius) + 1) - (targetX - this->radius);
         }
         else
         {
-          target_y += (sint32)((target_y - this->radius) + 1) - (target_y - this->radius);
+          targetY += (sint32)((targetY - this->radius) + 1) - (targetY - this->radius);
         }
       }
     }
   }
 
   // GESTION DES COLLISIONS AVEC MUR AU NORD-EST
-  if (1 == entourage[2] && floor(target_y - this->radius) != floor(y) && ceil(target_x + this->radius) != ceil(x))
+  if (1 == entourage[2] && floor(targetY - this->radius) != floor(y) && ceil(targetX + this->radius) != ceil(x))
   {
-    if (target_y > this->y) // Eloigne en X
+    if (targetY > this->y) // Eloigne en X
     {
-      target_x -= (target_x + this->radius) - (sint32)(target_x + this->radius);
+      targetX -= (targetX + this->radius) - (sint32)(targetX + this->radius);
     }
-    else if (target_x < this->x) // Eloigne en Y
+    else if (targetX < this->x) // Eloigne en Y
     {
-      target_y += (sint32)((target_y - this->radius) + 1) - (target_y - this->radius);
+      targetY += (sint32)((targetY - this->radius) + 1) - (targetY - this->radius);
     }
-    else if (target_y < this->y && target_x > this->x) // Approche
+    else if (targetY < this->y && targetX > this->x) // Approche
     {
-      if ((((target_x + this->radius)) - (sint32)(target_x + this->radius)) == 0.0 || (this->x - target_x) == 0.0)
+      if ((((targetX + this->radius)) - (sint32)(targetX + this->radius)) == 0.0 || (this->x - targetX) == 0.0)
       {
-        target_x -= (target_x + this->radius) - (sint32)(target_x + this->radius);
+        targetX -= (targetX + this->radius) - (sint32)(targetX + this->radius);
       }
       else
       {
         // Si ce sont les bords en Y qui ont �t� en contact lors de la collision
-        if ( (((target_y - this->radius)) - (sint32)((target_y - this->radius) + 1)) / (((target_x + this->radius)) - (sint32)(target_x + this->radius)) < (this->y - target_y) / (this->x - target_x))
+        if ( (((targetY - this->radius)) - (sint32)((targetY - this->radius) + 1)) / (((targetX + this->radius)) - (sint32)(targetX + this->radius)) < (this->y - targetY) / (this->x - targetX))
         {
-          target_x -= (target_x + this->radius) - (sint32)(target_x + this->radius);
+          targetX -= (targetX + this->radius) - (sint32)(targetX + this->radius);
         }
         else
         {
-          target_y += (sint32)((target_y - this->radius) + 1) - (target_y - this->radius);
+          targetY += (sint32)((targetY - this->radius) + 1) - (targetY - this->radius);
         }
       }
     }
@@ -268,40 +268,40 @@ void Player::droite(float16 distance, bool8 entourage[8])
 }
 */
 
-void Player::horizontal_turn(float16 angle)
+void Player::horizontalTurn(float16 angle)
 {
-  this->horizontal_angle += angle;
+  this->horizontalAngle += angle;
 
-  while (this->horizontal_angle >= 180.0f) { // Lorsqu'on depasse la limite (1/2 tour)
-    this->horizontal_angle -= 360.0f;
+  while (this->horizontalAngle >= 180.0f) { // Lorsqu'on depasse la limite (1/2 tour)
+    this->horizontalAngle -= 360.0f;
   }
-  while (this->horizontal_angle < -180.0f) { // Idem apres 1/2 tours vers la droite
-    this->horizontal_angle += 360.0f;
+  while (this->horizontalAngle < -180.0f) { // Idem apres 1/2 tours vers la droite
+    this->horizontalAngle += 360.0f;
   }
 }
 
-void Player::vertical_turn(float16 angle)
+void Player::verticalTurn(float16 angle)
 {
-  this->vertical_angle += angle;
+  this->verticalAngle += angle;
 
-  if (45.0f < this->vertical_angle) {
-    this->vertical_angle = 45.0f;
-  } else if (-45.0f > this->vertical_angle) {
-    this->vertical_angle = -45.0f;
+  if (45.0f < this->verticalAngle) {
+    this->verticalAngle = 45.0f;
+  } else if (-45.0f > this->verticalAngle) {
+    this->verticalAngle = -45.0f;
   }
 }
 
-void Player::go_up()
+void Player::goUp()
 {
   this->z += 0.05;
 }
 
-void Player::go_down()
+void Player::goDown()
 {
   this->z -= 0.05;
 }
 
-void Player::get_position(float16* x, float16* y, float16* z)
+void Player::getPosition(float16* x, float16* y, float16* z)
 {
   *x = this->x;
   *y = this->y;
@@ -316,7 +316,7 @@ void Player::look(void)
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
-  glRotatef(this->vertical_angle, -1, 0, 0); // Hausse / baisse la tête
+  glRotatef(this->verticalAngle, -1, 0, 0); // Hausse / baisse la tête
 
   gluLookAt(
     // Eye position
@@ -325,71 +325,71 @@ void Player::look(void)
     this->z + HEIGHT_LOOK_PLAYER,
 
     // target
-    this->y - cos(-this->horizontal_angle * RADIANS_PAR_DEGRES),
-    this->x + sin(-this->horizontal_angle * RADIANS_PAR_DEGRES),
-    //HEIGHT_LOOK_PLAYER + tan(this->vertical_angle * RADIANS_PAR_DEGRES),
+    this->y - cos(-this->horizontalAngle * RADIANS_PAR_DEGRES),
+    this->x + sin(-this->horizontalAngle * RADIANS_PAR_DEGRES),
+    //HEIGHT_LOOK_PLAYER + tan(this->verticalAngle * RADIANS_PAR_DEGRES),
     this->z + HEIGHT_LOOK_PLAYER,
 
     // La verticale est en Z
     0,0,1);
 }
 
-void Player::set_position(float16 x, float16 y, float16 z)
+void Player::setPosition(float16 x, float16 y, float16 z)
 {
   this->x = x;
   this->y = y;
   this->z = z;
 }
 
-void Player::set_direction(float16 horizontal_angle, float16 vertical_angle)
+void Player::setDirection(float16 horizontalAngle, float16 verticalAngle)
 {
-  this->horizontal_angle = horizontal_angle;
+  this->horizontalAngle = horizontalAngle;
 
-  while (this->horizontal_angle >= 180.0f) { // Lorsqu'on depasse la limite (1/2 tour)
-    this->horizontal_angle -= 360.0f;
+  while (this->horizontalAngle >= 180.0f) { // Lorsqu'on depasse la limite (1/2 tour)
+    this->horizontalAngle -= 360.0f;
   }
-  while (this->horizontal_angle < -180.0f) { // Idem apres 1/2 tours vers la droite
-    this->horizontal_angle += 360.0f;
+  while (this->horizontalAngle < -180.0f) { // Idem apres 1/2 tours vers la droite
+    this->horizontalAngle += 360.0f;
   }
 
-  this->vertical_angle = vertical_angle;
+  this->verticalAngle = verticalAngle;
 
-  if (45.0f < this->vertical_angle) {
-    this->vertical_angle = 45.0f;
-  } else if (-45.0f > this->vertical_angle) {
-    this->vertical_angle = -45.0f;
+  if (45.0f < this->verticalAngle) {
+    this->verticalAngle = 45.0f;
+  } else if (-45.0f > this->verticalAngle) {
+    this->verticalAngle = -45.0f;
   }
 }
 
-float16 Player::get_x()
+float16 Player::getX()
 {
   return this->x;
 }
 
-float16 Player::get_y()
+float16 Player::getY()
 {
   return this->y;
 }
 
-float16 Player::get_z()
+float16 Player::getZ()
 {
   return this->z;
 }
 
-float16 Player::get_horizontal_angle()
+float16 Player::getHorizontalAngle()
 {
-  return this->horizontal_angle;
+  return this->horizontalAngle;
 }
 
-float16 Player::get_vertical_angle()
+float16 Player::getVerticalAngle()
 {
-  return this->vertical_angle;
+  return this->verticalAngle;
 }
 
 /*
-void Player::add_position(sint32 time, float16 x, float16 y, float16 z, float16 horizontal_angle, float16 vertical_angle)
+void Player::add_position(sint32 time, float16 x, float16 y, float16 z, float16 horizontalAngle, float16 verticalAngle)
 {
-  this->positions.ajouter(time, x, y, z, horizontal_angle, vertical_angle);
+  this->positions.ajouter(time, x, y, z, horizontalAngle, verticalAngle);
 }
 */
 
@@ -420,36 +420,36 @@ bool8 Player::positionnerDepuisLHistorique(sint32 heure)
     return this->historiqueDesPositions.heureDernierePositionConnue(heure);
 }*/
 
-sint32 Player::get_reapparition_time(void)
+sint32 Player::getReapparitionTime(void)
 {
-  return this->reapparition_time;
+  return this->reapparitionTime;
 }
 
-void Player::set_reapparition_time(sint32 time)
+void Player::setReapparitionTime(sint32 time)
 {
-  this->reapparition_time = time;
+  this->reapparitionTime = time;
 }
 
-Point3Float Player::get_reapparition_point(void)
+Point3Float Player::getReapparitionPoint(void)
 {
-  return this->reapparition_point;
+  return this->reapparitionPoint;
 }
 
-void Player::set_reapparition_point(Point3Float point)
+void Player::setReapparitionPoint(Point3Float point)
 {
-  this->reapparition_point.x = point.x;
-  this->reapparition_point.y = point.y;
-  this->reapparition_point.y = point.z;
+  this->reapparitionPoint.x = point.x;
+  this->reapparitionPoint.y = point.y;
+  this->reapparitionPoint.y = point.z;
 }
 
-float16 Player::get_reapparition_angle(void)
+float16 Player::getReapparitionAngle(void)
 {
-  return this->reapparition_angle;
+  return this->reapparitionAngle;
 }
 
-void Player::set_reapparition_angle(float16 angle)
+void Player::setReapparitionAngle(float16 angle)
 {
-  this->reapparition_angle = angle;
+  this->reapparitionAngle = angle;
 }
 
 /*
@@ -459,28 +459,28 @@ void Player::afficherHistorique(void)
 }
 */
 
-uint32 Player::get_winning_shots()
+uint32 Player::getWinningShots()
 {
-  return this->winning_shots_count;
+  return this->winningShotsCount;
 }
 
-uint32 Player::get_received_shots()
+uint32 Player::getReceivedShots()
 {
-  return this->received_shots_count;
+  return this->receivedShotsCount;
 }
 
-void Player::update_score(uint32 emitted, uint32 received)
+void Player::updateScore(uint32 emitted, uint32 received)
 {
-  this->winning_shots_count = emitted;
-  this->received_shots_count = received;
+  this->winningShotsCount = emitted;
+  this->receivedShotsCount = received;
 }
 
-void Player::set_username(std::string username)
+void Player::setUsername(std::string username)
 {
   this->username = username;
 }
 
-std::string Player::get_username(void)
+std::string Player::getUsername(void)
 {
   return this->username;
 }

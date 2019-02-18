@@ -13,7 +13,7 @@ ConteneurTextures::Texture ConteneurTextures::ajouter(std::string nomFichier)
   if (0 == texture.compteur)
   {
     // Sinon on cree reellement la texture
-    this->chargerTexture(nomFichier.c_str(), &texture.texture, &texture.largeur, &texture.hauteur);
+    this->chargerTexture(nomFichier, &texture.texture, &texture.largeur, &texture.hauteur);
   }
 
   // On compte une texture supplementaire
@@ -48,7 +48,7 @@ ConteneurTextures::Texture ConteneurTextures::texture(std::string nomFichier)
   return this->textures[nomFichier];
 }
 
-void ConteneurTextures::chargerTexture(const char* nomFichier, GLuint* texture, sint32* largeur, sint32* hauteur)
+void ConteneurTextures::chargerTexture(std::string nomFichier, GLuint* texture, sint32* largeur, sint32* hauteur)
 {
   SDL_Surface *surface;
   GLenum formatTexture;
@@ -56,7 +56,9 @@ void ConteneurTextures::chargerTexture(const char* nomFichier, GLuint* texture, 
 
   // Creation de la surface SDL a partir du fichier de la texture
   //surface = SDL_LoadBMP(nomFichier);
-  surface = IMG_Load(nomFichier);
+  std::string fullpath = "assets/" + nomFichier;
+
+  surface = IMG_Load(fullpath.c_str());
 
   if (NULL != surface)
   {
@@ -64,13 +66,13 @@ void ConteneurTextures::chargerTexture(const char* nomFichier, GLuint* texture, 
     // Verification de la largeur
     if ( 0 != (surface->w & (surface->w - 1)) )
     {
-      printf("Attention : la largeur de %s n'est pas une puissance de 2\n ", nomFichier);
+      printf("Attention : la largeur de %s n'est pas une puissance de 2\n ", nomFichier.c_str());
     }
 
     // Verification de la hauteur
     if ( 0 != (surface->h & (surface->h - 1)) )
     {
-      printf("Attention : la hauteur de %s n'est pas une puissance de 2\n ", nomFichier);
+      printf("Attention : la hauteur de %s n'est pas une puissance de 2\n ", nomFichier.c_str());
     }
 
     // Recuperation du nombre d'octets par pixel
@@ -149,7 +151,7 @@ void ConteneurTextures::chargerTexture(const char* nomFichier, GLuint* texture, 
   }
   else
   {
-    printf("SDL ne peut pas charger l'image %s : %s\n", nomFichier, SDL_GetError());
+    printf("SDL ne peut pas charger l'image %s : %s\n", nomFichier.c_str(), SDL_GetError());
     *texture = 0;
     *largeur = 1;
     *hauteur = 1;

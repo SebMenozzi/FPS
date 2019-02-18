@@ -11,24 +11,24 @@
 class Menu
 {
   public:
-    Menu(SDL_Window* fenetre, std::string imageFond);
+    Menu(SDL_Window* window, std::string backgroundImage);
     ~Menu();
-    void dessiner(bool8 force = FALSE);
-    void ajouter(Widget* widget);
+    void draw(bool8 force = FALSE);
+    void add(Widget* widget);
 
   private:
-    bool8 modifie();
-    void animer();
-    void distribuerEvenementAuxWidgets(SDL_Event evenement);
-    void passerLeFocusAuWidgetSuivant();
-    void dessinerFond();
-    ConteneurTextures conteneurTextures;
-    std::vector<Widget*> listeWidgets;
-    std::string imageFond;
-    bool8 apparenceModifiee;
-    SDL_Window* fenetre;
-    int largeurFenetre;
-    int hauteurFenetre;
+    bool8 change();
+    void animate();
+    void distributeEventToWidgets(SDL_Event evenement);
+    void focusToNext();
+    void drawBackground();
+    ConteneurTextures texturesContainer;
+    std::vector<Widget*> widgetsList;
+    std::string backgroundImage;
+    bool8 stateChanged;
+    SDL_Window* window;
+    int windowWidth;
+    int windowHeight;
 };
 
 #endif // MENU_H_INCLUDED

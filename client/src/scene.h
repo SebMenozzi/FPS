@@ -14,10 +14,10 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include "objet3DStatique.h"
-#include "carte.h"
+#include "map.h"
 #include "heightmap.h"
 #include "player.h"
-#include "horloge.h"
+#include "clock.h"
 #include "udpClient.h"
 #include "gui/overlay.h"
 #include "gui/imageOverlay.h"
@@ -27,33 +27,32 @@ class Scene
 {
   private:
     //typedef std::map<std::string, GLuint> Textures;
-    SDL_Window* fenetre;
-    int largeurFenetre;
-    int hauteurFenetre;
+    SDL_Window* window;
+    int width;
+    int height;
 
-    Horloge horloge;
-    UDPClient* clientUDP;
+    Clock clock;
+    UDPClient* udpClient;
 
-    bool8 continuer;
-    uint32 tempsDernierPas;
+    bool8 cont;
+    uint32 timeLastMove;
 
     Objet3DStatique* skybox;
-    Carte* carte;
+    Map* map;
     Heightmap* heightmap;
 
-    TTF_Font* police;
-    std::string texteAAfficher;
+    TTF_Font* font;
+    std::string displayed_text;
 
-    void gererEvenements(void);
-    void animer(void);
-    void dessiner(void);
-    void dessinerTerrain(void);
-    void afficher(void);
-    void dessiner2D(void);
+    void handle_events(void);
+    void animate(void);
+    void draw(void);
+    void display(void);
+    void draw2D(void);
 
     //Personnage* personnage;
     std::vector<Player*> players;
-    uint32 numeroJoueur;
+    uint32 playerId;
 
     sint32 heureFinPartie;
 
@@ -71,16 +70,16 @@ class Scene
     std::vector<EtiquetteOverlay*> etiquettesScoresRecu;
 
   public:
-    Scene(SDL_Window* fenetre);
+    Scene(SDL_Window* window);
     ~Scene();
-    void executer();
-    void clientUDPAUtiliser(UDPClient* clientUDP);
-    void reglerHorloge(sint32 heure);
-    void creerPersonnage();
-    void reglerNumeroJoueur(uint32 numeroJoueur);
-    void reglerHeureFinPartie(sint32 heureFin);
-    void creerTableauScores(uint32 nbJoueurs);
-    void reglerPseudosJoueurs(std::vector<std::string> listePseudosJoueurs);
+    void run();
+    void setUDPClient(UDPClient* udpClient);
+    void setClock(sint32 time);
+    void createPlayer();
+    void setPlayerId(uint32 playerId);
+    //void setEndtime(sint32 heureFin);
+    //void creerTableauScores(uint32 nbJoueurs);
+    void set_usernames(std::vector<std::string> listePseudosJoueurs);
 };
 
-#endif // SCENE_H_INCLUDED
+#endif

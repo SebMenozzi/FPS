@@ -4,17 +4,17 @@
 
 Widget::Widget(sint32 x, sint32 y)
 {
-  this->_positionX = x;
-  this->_positionY = y;
-  this->_apparenceModifiee = TRUE;
-  this->_visible = TRUE;
-  this->_demandeLeFocus = FALSE;
-  this->_aLeFocus = FALSE;
-  this->_etat = PAS_SURVOLE;
-  this->_clique = FALSE;
-  this->_largeur = 0;
-  this->_hauteur = 0;
-  this->_focussable = TRUE;
+  this->x = x;
+  this->y = y;
+  this->stateChanged = TRUE;
+  this->isVisible = TRUE;
+  this->askFocus = FALSE;
+  this->hasFocus = FALSE;
+  this->state = PAS_SURVOLE;
+  this->clicked = FALSE;
+  this->width = 0;
+  this->height = 0;
+  this->focusable = TRUE;
 }
 
 Widget::~Widget()
@@ -22,147 +22,135 @@ Widget::~Widget()
 
 }
 
-void Widget::cliqueGaucheEnfonce()
+void Widget::leftClickPressed()
 {
-  if(SURVOLE == this->_etat)
-  {
-    this->_demandeLeFocus = TRUE;
-    this->_etat = SURVOLE_ET_ENFONCE;
-    this->_apparenceModifiee = TRUE;
+  if(SURVOLE == this->state) {
+    this->askFocus = TRUE;
+    this->state = SURVOLE_ET_ENFONCE;
+    this->stateChanged = TRUE;
   }
 }
 
-void Widget::cliqueGaucheRelache()
+void Widget::leftClickReleased()
 {
-  if(SURVOLE_ET_ENFONCE == this->_etat)
-  {
-    this->_etat = SURVOLE;
-    this->_clique = TRUE;
-    this->_apparenceModifiee = TRUE;
+  if(SURVOLE_ET_ENFONCE == this->state) {
+    this->state = SURVOLE;
+    this->clicked = TRUE;
+    this->stateChanged = TRUE;
   }
 }
 
-void Widget::sourisDeplacee(uint32 x, uint32 y)
+void Widget::cursorMoved(uint32 x, uint32 y)
 {
 
-  int survoleWidget = this->_visible == TRUE &&
-                (int) x > this->_positionX - ((int) this->_largeur / 2) &&
-                (int) x < this->_positionX + ((int) this->_largeur / 2) &&
-                (int) y > this->_positionY - ((int) this->_hauteur / 2) &&
-                (int) y < this->_positionY + ((int) this->_hauteur / 2);
+  int widgetHovered = this->isVisible == TRUE &&
+                (int) x > this->x - ((int) this->width / 2) &&
+                (int) x < this->x + ((int) this->width / 2) &&
+                (int) y > this->y - ((int) this->height / 2) &&
+                (int) y < this->y + ((int) this->height / 2);
 
   // Si la souris est actuellement sur le widget
-  if(survoleWidget)
-  {
+  if(widgetHovered) {
     // Si le widget n'etait pas survole
-    if(PAS_SURVOLE == this->_etat)
-    {
-      this->_etat = SURVOLE;
-      this->_apparenceModifiee = TRUE;
+    if(PAS_SURVOLE == this->state) {
+      this->state = SURVOLE;
+      this->stateChanged = TRUE;
     }
-  }
-  // Si la souris n'est actuellement pas sur le widget
-  else
-  {
+  } else { // Si la souris n'est actuellement pas sur le widget
     // Si le widget etait survole ou enfonce
-    if(SURVOLE == this->_etat || SURVOLE_ET_ENFONCE == this->_etat)
-    {
-      this->_etat = PAS_SURVOLE;
-      this->_apparenceModifiee = TRUE;
+    if(SURVOLE == this->state || SURVOLE_ET_ENFONCE == this->state) {
+      this->state = PAS_SURVOLE;
+      this->stateChanged = TRUE;
     }
   }
 
   // Memorisation de l'emplacement de la souris pour donner acces a cette information aux widgets derives
-  this->_sourisX = x;
-  this->_sourisY = y;
+  this->cursorX = x;
+  this->cursorY = y;
 }
 
-void Widget::toucheEnfoncee(char c)
+void Widget::keyPressed(char key)
 {
 
 }
 
-void Widget::toucheRelachee(char c)
+void Widget::keyReleased(char key)
 {
 
 }
 
-bool8 Widget::clique()
+bool8 Widget::click()
 {
-  bool8 clique = this->_clique;
-  this->_clique = FALSE;
-  return clique;
+  bool8 clicked = this->clicked;
+  this->clicked = FALSE;
+  return clicked;
 }
 
-bool8 Widget::demandeLeFocus()
+bool8 Widget::getAskFocus()
 {
-  bool8 demandeLeFocus = this->_demandeLeFocus;
-  this->_demandeLeFocus = FALSE;
-  return demandeLeFocus;
+  bool8 askFocus = this->askFocus;
+  this->askFocus = FALSE;
+  return askFocus;
 }
 
-bool8 Widget::apparenceModifiee()
+bool8 Widget::getStateChanged()
 {
-  bool8 apparenceModifiee = this->_apparenceModifiee;
-  this->_apparenceModifiee = FALSE;
-  return apparenceModifiee;
+  bool8 stateChanged = this->stateChanged;
+  this->stateChanged = FALSE;
+  return stateChanged;
 }
 
-void Widget::prendLeFocus()
+void Widget::focus()
 {
   // ATTENTION : Reporte dans les classes derivees toutes modifications de cette methode
-  if (TRUE == this->focussable())
-  {
-    this->_aLeFocus = TRUE;
-    this->_apparenceModifiee = TRUE;
+  if (TRUE == this->isFocusable()) {
+    this->hasFocus = TRUE;
+    this->stateChanged = TRUE;
   }
 }
 
-void Widget::perdLeFocus()
+void Widget::blur()
 {
   // ATTENTION : Reporte dans les classes derivees toutes modifications de cette methode
-  this->_aLeFocus = FALSE;
-  this->_apparenceModifiee = TRUE;
+  this->hasFocus = FALSE;
+  this->stateChanged = TRUE;
 }
 
-bool8 Widget::aLeFocus()
+bool8 Widget::isFocused()
 {
-  return this->_aLeFocus;
+  return this->hasFocus;
 }
 
-bool8 Widget::focussable()
+bool8 Widget::isFocusable()
 {
-  if(FALSE == this->_visible)
-  {
+  if(FALSE == this->isVisible) {
     return FALSE;
   }
 
-  return this->_focussable;
+  return this->focusable;
 }
 
-void Widget::visible(bool8 visible)
+void Widget::setVisibility(bool8 visible)
 {
-  this->_visible = visible;
+  this->isVisible = visible;
 
-  if (FALSE == this->_visible)
-  {
-    this->perdLeFocus();
-    this->_etat = PAS_SURVOLE;
+  if (FALSE == this->isVisible) {
+    this->blur();
+    this->state = PAS_SURVOLE;
   }
 
-  this->_apparenceModifiee = TRUE;
+  this->stateChanged = TRUE;
 }
 
-void Widget::dessiner()
+void Widget::draw()
 {
-  if(TRUE == this->_visible)
-  {
-    this->dessinDuWidget();
+  if(TRUE == this->isVisible) {
+    this->drawWidget();
   }
 }
 
-uint32 Widget::puissanceDeDeuxSuperieure(uint32 i)
+uint32 Widget::powerOfTwoGreater(uint32 i)
 {
   double32 logbase2 = log(i) / log(2);
-  return (uint32)round(pow(2.0, ceil(logbase2)));
+  return (uint32) round(pow(2.0, ceil(logbase2)));
 }

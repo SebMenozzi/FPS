@@ -11,59 +11,59 @@ class Widget
   public: // L'utilisateur a acces a ces membres
     Widget(sint32 x, sint32 y);
     virtual ~Widget();
-    bool8 clique();
-    void visible(bool8 visible);
+    bool8 click();
+    void setVisibility(bool8 visible);
 
   private: // Seul le Menu a une autorisation speciale d'acces a ces membres
-    // Souris
-    virtual void cliqueGaucheEnfonce();
-    virtual void cliqueGaucheRelache();
-    virtual void sourisDeplacee(uint32 x, uint32 y);
+    // Cursor
+    virtual void leftClickPressed();
+    virtual void leftClickReleased();
+    virtual void cursorMoved(uint32 x, uint32 y);
 
-    // Clavier
-    virtual void toucheEnfoncee(char c);
-    virtual void toucheRelachee(char c);
+    // Keyboard
+    virtual void keyPressed(char key);
+    virtual void keyReleased(char key);
 
     // Focus
-    virtual void prendLeFocus();
-    virtual void perdLeFocus();
-    bool8 aLeFocus();
-    bool8 demandeLeFocus();
+    virtual void focus();
+    virtual void blur();
+    bool8 isFocused();
+    bool8 getAskFocus();
 
     // Dessin
-    bool8 apparenceModifiee();
-    void dessiner();
-    virtual void dessinDuWidget() = 0;
+    bool8 getStateChanged();
+    void draw();
+    virtual void drawWidget() = 0;
 
   protected: // Seule les classes derivees ont acces a ces membres
     // Attention : Le Menu a acces a ces membres mais ne doit pas y toucher
 
     // Etat du widget par rapport a la souris
-    enum Etat {PAS_SURVOLE, SURVOLE, SURVOLE_ET_ENFONCE};
-    Etat _etat;
-    bool8 _clique;
+    enum Etat { PAS_SURVOLE, SURVOLE, SURVOLE_ET_ENFONCE };
+    Etat state;
+    bool8 clicked;
 
     // Position / dimentions
-    sint32 _positionX;
-    sint32 _positionY;
-    uint32 _hauteur;
-    uint32 _largeur;
+    sint32 x;
+    sint32 y;
+    uint32 height;
+    uint32 width;
 
     // Focus
-    bool8 _aLeFocus;
-    bool8 _focussable;
-    bool8 _demandeLeFocus;
-    bool8 focussable();
+    bool8 hasFocus;
+    bool8 focusable;
+    bool8 askFocus;
+    bool8 isFocusable();
 
-    bool8 _apparenceModifiee;
-    bool8 _visible;
+    bool8 stateChanged;
+    bool8 isVisible;
 
     // Calculs
-    uint32 puissanceDeDeuxSuperieure(uint32 i);
+    uint32 powerOfTwoGreater(uint32 i);
 
-    // Souris
-    uint32 _sourisX;
-    uint32 _sourisY;
+    // Cursor
+    uint32 cursorX;
+    uint32 cursorY;
 };
 
 #endif // WIDGET_H_INCLUDED

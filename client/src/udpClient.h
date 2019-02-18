@@ -1,21 +1,16 @@
 #ifndef UDPCLIENT_H_INCLUDED
 #define UDPCLIENT_H_INCLUDED
 
-#if defined(__WIN32__)
-  #include <winsock2.h>
-  typedef int SOCKLEN_T;
-#else
-  #include <sys/socket.h>
-  #include <netinet/in.h>
-  #include <netinet/ip.h>
-  #include <arpa/inet.h>
-  #include <netdb.h>
-  #include <fcntl.h>
-  typedef sockaddr_in SOCKADDR_IN;
-  typedef sockaddr SOCKADDR;
-  typedef int SOCKET;
-  typedef socklen_t SOCKLEN_T;
-#endif
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <fcntl.h>
+typedef sockaddr_in SOCKADDR_IN;
+typedef sockaddr SOCKADDR;
+typedef int SOCKET;
+typedef socklen_t SOCKLEN_T;
 #include "types.h"
 #include <string>
 

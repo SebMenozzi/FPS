@@ -29,7 +29,7 @@ class Objet3DStatique
     float16 z;
 
     // Angle horizontal avec la verticale en z
-    float16 horizontal_angle;
+    float16 horizontalAngle;
 
     std::string nom;
 

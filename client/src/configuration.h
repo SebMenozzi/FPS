@@ -1,13 +1,10 @@
 #ifndef CONFIGURATION_H_INCLUDED
 #define CONFIGURATION_H_INCLUDED
 
-#define LARGEUR_FENETRE (320 * 2)
-#define HAUTEUR_FENETRE (240 * 2)
+#define WINDOW_WIDTH (1024)
+#define WINDOW_HEIGHT (768)
 
-#define LARGEUR_FENETRE_PAR_DEFAUT 1024
-#define HAUTEUR_FENETRE_PAR_DEFAUT 768
-
-#define TITRE_APPLICATION "Mon premier jeu vidéo"
+#define TITLE_APPLICATION "Mon premier jeu vidéo"
 
 #define PRET 0.1
 #define LOIN 1000.0
