@@ -5,7 +5,7 @@
 #include "widget.h"
 #include "../types.h"
 #include <string>
-#include "../conteneurTextures.h"
+#include "../texturesContainer.h"
 #include <SDL2/SDL_ttf.h>
 
 class Button : public Widget
@@ -18,7 +18,7 @@ class Button : public Widget
     void setText(std::string text);
 
   private:
-    ConteneurTextures texturesContainer;
+    TexturesContainer texturesContainer;
     GLuint textTexture;
     uint32 textWidth;
     uint32 textHeight;

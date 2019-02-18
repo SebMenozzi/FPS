@@ -10,13 +10,13 @@
   #include <GL/glu.h>
 #endif
 #include <string>
-#include "conteneurTextures.h"
+#include "texturesContainer.h"
 #include "types.h"
 
 class Map
 {
   private:
-    ConteneurTextures conteneurTextures;
+    TexturesContainer texturesContainer;
 
     bool8* map;
     uint32 width;

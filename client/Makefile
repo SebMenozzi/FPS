@@ -2,14 +2,12 @@
 .SUFFIXES :
 
 NAME = client
-SRC =	src/gui/button.cpp src/gui/checkbox.cpp src/map.cpp src/gui/numericInput.cpp \
-	src/conteneurTextures.cpp src/gui/label.cpp src/gui/etiquetteOverlay.cpp      \
-	src/fonctionsUtiles.cpp src/historiqueDesPositions.cpp src/clock.cpp    \
-	src/gui/imageOverlay.cpp src/init.cpp src/main.cpp src/gui/menu.cpp src/objet3DStatique.cpp   \
-	src/gui/overlay.cpp src/player.cpp src/scene.cpp src/udpClient.cpp src/gui/widget.cpp    \
-	src/gui/widgetOverlay.cpp src/gui/textInput.cpp src/game.cpp src/iniFile.cpp src/objet3D.cpp \
-	src/traitementChemin.cpp src/conteneurMateriaux.cpp src/materiau.cpp \
-	src/heightmap.cpp
+SRC =	src/gui/menu.cpp src/gui/widget.cpp src/gui/textInput.cpp \
+	src/gui/numericInput.cpp src/gui/checkbox.cpp src/gui/label.cpp  \
+	src/gui/button.cpp src/texturesContainer.cpp src/utils.cpp src/clock.cpp  \
+	src/init.cpp src/main.cpp src/udpClient.cpp src/game.cpp \
+ 	src/player.cpp src/objet3DStatique.cpp src/scene.cpp src/map.cpp \
+  src/heightmap.cpp src/iniFile.cpp
 
 CC = g++
 

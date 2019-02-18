@@ -15,10 +15,10 @@ TextInput::TextInput(SDL_Window* window, sint32 x, sint32 y) : Widget(x, y)
   #define INPUT_TEXT_WITH_FOCUS "input_text_with_focus.bmp"
   #define INPUT_TEXT_WITHOUT_FOCUS "input_text_without_focus.bmp"
 
-  this->texturesContainer.ajouter(INPUT_TEXT_WITH_FOCUS);
-  this->texturesContainer.ajouter(INPUT_TEXT_WITHOUT_FOCUS);
-  this->width = this->texturesContainer.texture(INPUT_TEXT_WITHOUT_FOCUS).largeur;
-  this->height = this->texturesContainer.texture(INPUT_TEXT_WITHOUT_FOCUS).hauteur;
+  this->texturesContainer.addTexture(INPUT_TEXT_WITH_FOCUS);
+  this->texturesContainer.addTexture(INPUT_TEXT_WITHOUT_FOCUS);
+  this->width = this->texturesContainer.getTexture(INPUT_TEXT_WITHOUT_FOCUS).width;
+  this->height = this->texturesContainer.getTexture(INPUT_TEXT_WITHOUT_FOCUS).height;
 
   if(0 == this->compteurInstance) {
     this->font = TTF_OpenFont("assets/Cartonsix NC.ttf", 35);
@@ -30,8 +30,8 @@ TextInput::TextInput(SDL_Window* window, sint32 x, sint32 y) : Widget(x, y)
 
 TextInput::~TextInput()
 {
-  this->texturesContainer.supprimer(INPUT_TEXT_WITH_FOCUS);
-  this->texturesContainer.supprimer(INPUT_TEXT_WITHOUT_FOCUS);
+  this->texturesContainer.deleteTexture(INPUT_TEXT_WITH_FOCUS);
+  this->texturesContainer.deleteTexture(INPUT_TEXT_WITHOUT_FOCUS);
 
   glDeleteTextures(1, &this->textTexture);
 
@@ -64,10 +64,10 @@ void TextInput::drawWidget()
 {
   if(TRUE == this->hasFocus) {
     // Selection de l'image de fond
-    glBindTexture(GL_TEXTURE_2D, this->texturesContainer.texture(INPUT_TEXT_WITH_FOCUS).texture);
+    glBindTexture(GL_TEXTURE_2D, this->texturesContainer.getTexture(INPUT_TEXT_WITH_FOCUS).texture);
   } else {
     // Selection de l'image de fond
-    glBindTexture(GL_TEXTURE_2D, this->texturesContainer.texture(INPUT_TEXT_WITHOUT_FOCUS).texture);
+    glBindTexture(GL_TEXTURE_2D, this->texturesContainer.getTexture(INPUT_TEXT_WITHOUT_FOCUS).texture);
   }
 
   // Application de l'image de fond

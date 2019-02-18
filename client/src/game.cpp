@@ -10,8 +10,6 @@
 #include "gui/button.h"
 #include "gui/textInput.h"
 #include "gui/label.h"
-//#include "gui/caseACocher.h"
-//#include "gui/champSaisieNumerique.h"
 
 // autres
 #include "scene.h"
@@ -19,7 +17,7 @@
 #include "configuration.h"
 #include "udpClient.h"
 #include "clock.h"
-#include "fonctionsUtiles.h"
+#include "utils.h"
 #include "iniFile.h"
 
 // Toutes 5 secondes
@@ -150,16 +148,16 @@ bool8 Game::run(void)
           // Si on a recu un message
           if(receivedMessage != "") {
             // Lecture de l'header
-            std::string header = decapsuler(&receivedMessage);
+            std::string header = decapsulate(&receivedMessage);
 
             if (header == "REPONSE_HEURE") {
               // Lecture de l'heure serveur
-              std::string timeAsked = decapsuler(&receivedMessage);
-              std::string timeReceived = decapsuler(&receivedMessage);
+              std::string timeAsked = decapsulate(&receivedMessage);
+              std::string timeReceived = decapsulate(&receivedMessage);
 
               // Calcule de l'heure actuelle sur le serveur
-              sint32 time = stringEnSint32(timeAsked);
-              sint32 timeAjusted = stringEnSint32(timeReceived) + ((horlogeClient.getTime() - time) / 2);
+              sint32 time = stringToSint32(timeAsked);
+              sint32 timeAjusted = stringToSint32(timeReceived) + ((horlogeClient.getTime() - time) / 2);
 
               // Adjust the clock according the server clock
               adjustedClock.adjust(timeAjusted);
@@ -171,14 +169,14 @@ bool8 Game::run(void)
               playerUsernames.clear();
 
               while(TRUE) {
-                std::string username = decapsuler(&receivedMessage);
+                std::string username = decapsulate(&receivedMessage);
                 if (username == "") {
                   break;
                 }
                 playerUsernames.push_back(username);
               }
 
-              numberPlayersLabel.changeText("Number of players : " + sint32EnString(playerUsernames.size()));
+              numberPlayersLabel.changeText("Number of players : " + sint32ToString(playerUsernames.size()));
             }
           }
 
@@ -190,7 +188,7 @@ bool8 Game::run(void)
             SDL_RaiseWindow(this->window);
 
             // On joue
-            init_openGL();
+            initOpenGL();
             Scene scene(this->window);
             scene.setClock(adjustedClock.getTime());
             scene.setUDPClient(&udpClient);

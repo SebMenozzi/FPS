@@ -62,8 +62,8 @@ Map::Map(const char* nomFichier)
 Map::~Map()
 {
   delete this->map;
-  this->conteneurTextures.supprimer("mur.bmp");
-  this->conteneurTextures.supprimer("herbe.bmp");
+  this->texturesContainer.deleteTexture("mur.bmp");
+  this->texturesContainer.deleteTexture("herbe.bmp");
 }
 
 void Map::draw()
@@ -74,8 +74,8 @@ void Map::draw()
 void Map::create_draw_list()
 {
   // Chargement de la texture du mur
-  this->conteneurTextures.ajouter("mur.bmp");
-  this->conteneurTextures.ajouter("herbe.bmp");
+  this->texturesContainer.addTexture("mur.bmp");
+  this->texturesContainer.addTexture("herbe.bmp");
 
   // Creation de la liste d'affichage
   this->draw_list = glGenLists(1);
@@ -85,7 +85,7 @@ void Map::create_draw_list()
   glEnable(GL_TEXTURE_2D);
 
   // Selection de la texture
-  glBindTexture(GL_TEXTURE_2D, this->conteneurTextures.texture("mur.bmp").texture);
+  glBindTexture(GL_TEXTURE_2D, this->texturesContainer.getTexture("mur.bmp").texture);
 
   bool8 caseGauche;
   bool8 caseDroite;
@@ -166,7 +166,7 @@ void Map::create_draw_list()
   }
 
   // L'herbe
-  glBindTexture(GL_TEXTURE_2D, this->conteneurTextures.texture("herbe.bmp").texture);
+  glBindTexture(GL_TEXTURE_2D, this->texturesContainer.getTexture("herbe.bmp").texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // Repete la texture
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glBegin(GL_QUADS);

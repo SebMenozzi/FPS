@@ -8,9 +8,8 @@ class Clock
     Clock();
     void adjust(sint32 time);
     sint32 getTime(void);
+    sint32 getTicks(void);
   private:
-  	sint32 getTicks(void);
-
     sint32 start_time;
 };
 

@@ -10,7 +10,7 @@
 #endif
 #include "types.h"
 
-void init_openGL(void)
+void initOpenGL(void)
 {
   glClearColor(0, 0, 0, 0);
 

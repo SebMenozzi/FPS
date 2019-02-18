@@ -256,18 +256,6 @@ void Player::move(float16 distance, float16 direction, bool8 entourage[8], float
   */
 }
 
-/*
-void Player::gauche(float16 distance, bool8 entourage[8])
-{
-  this->avancer(distance, 90.0, entourage);
-}
-
-void Player::droite(float16 distance, bool8 entourage[8])
-{
-  this->avancer(distance, -90.0, entourage);
-}
-*/
-
 void Player::horizontalTurn(float16 angle)
 {
   this->horizontalAngle += angle;
@@ -385,40 +373,6 @@ float16 Player::getVerticalAngle()
 {
   return this->verticalAngle;
 }
-
-/*
-void Player::add_position(sint32 time, float16 x, float16 y, float16 z, float16 horizontalAngle, float16 verticalAngle)
-{
-  this->positions.ajouter(time, x, y, z, horizontalAngle, verticalAngle);
-}
-*/
-
-/*
-bool8 Player::positionnerDepuisLHistorique(sint32 heure)
-{
-  float16 x;
-  float16 y;
-  float16 angle;
-
-  if (this->historiqueDesPositions.calculer(heure, &x, &y, &angle))
-  {
-    // TODO: calculer avec la composante Z
-    this->positionner(x, y, 0);
-    this->orienter(angle, 0);
-
-    return TRUE;
-  }
-  else
-  {
-    return FALSE;
-  }
-}
-*/
-
-/*bool8 Player::heureDernierePositionConnue(sint32* heure)
-{
-    return this->historiqueDesPositions.heureDernierePositionConnue(heure);
-}*/
 
 sint32 Player::getReapparitionTime(void)
 {

@@ -1,76 +1,74 @@
-#include "fonctionsUtiles.h"
+#include "utils.h"
 #include <SDL2/SDL.h>
 #include <sstream>
 
-std::string decapsuler(std::string* message)
+std::string decapsulate(std::string* message)
 {
-  std::string entete;
+  std::string header;
 
-  // Recherche de la position de la premiere espace
-  size_t finEntete = message->find(' ');
+  size_t endHeader = message->find(' ');
 
-  // S'il n'y a pas d'espace
-  if (std::string::npos == finEntete)
-  {
-    // L'entete est le message lui meme
-    entete = *message;
+  // If there is not space
+  if (std::string::npos == endHeader) {
+    // The header is the message it self
+    header = *message;
 
-    // Le message n'encapsule rien. Il devient vide
+    // The message is then clear because it doesn't encapsulate anything
     message->clear();
 
-    return entete;
+    return header;
   }
 
-  // Recuperation de l'entete
-  entete = message->substr(0, finEntete);
+  // Retrieve the header
+  header = message->substr(0, endHeader);
 
-  // Suppression de l'entete au message
-  *message = message->substr(finEntete+1);
+  // delete header to the message
+  *message = message->substr(endHeader + 1);
 
-  return entete;
+  return header;
 }
 
-sint32 stringEnSint32(std::string chaine)
+sint32 stringToSint32(std::string string)
 {
   std::stringstream flux;
-  flux << chaine;
-  sint32 valeur;
-  flux >> valeur;
+  flux << string;
+  sint32 value;
+  flux >> value;
 
-  return valeur;
+  return value;
 }
 
-uint32 stringEnUint32(std::string chaine)
+uint32 stringToUint32(std::string string)
 {
   std::stringstream flux;
-  flux << chaine;
-  uint32 valeur;
-  flux >> valeur;
+  flux << string;
+  uint32 value;
+  flux >> value;
 
-  return valeur;
+  return value;
 }
 
-float16 stringEnFloat16(std::string chaine)
+float16 stringToFloat16(std::string string)
 {
   std::stringstream flux;
-  flux << chaine;
-  float16 valeur;
-  flux >> valeur;
+  flux << string;
+  float16 value;
+  flux >> value;
 
-  return valeur;
+  return value;
 }
 
-std::string sint32EnString(sint32 valeur)
+std::string sint32ToString(sint32 value)
 {
   std::stringstream flux;
-  flux << valeur;
-  std::string chaine;
-  flux >> chaine;
+  flux << value;
+  std::string string;
+  flux >> string;
 
-  return chaine;
+  return string;
 }
 
-Uint32 get_pixel(SDL_Surface *surface, int x, int y)
+Uint32 getPixel(SDL_Surface *surface, int x, int y)
 {
   int bpp = surface->format->BytesPerPixel;
   /* Here p is the address to the pixel we want to retrieve */
@@ -102,7 +100,7 @@ Uint32 get_pixel(SDL_Surface *surface, int x, int y)
 }
 
 // https://en.wikipedia.org/wiki/Barycentric_coordinate_system
-float16 barycentre(Point3Float p1, Point3Float p2, Point3Float p3, Point2Float pos)
+float16 barycenter(Point3Float p1, Point3Float p2, Point3Float p3, Point2Float pos)
 {
   float16 det = (p2.y - p3.y) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.y - p3.y);
 	float16 l1 = ((p2.y - p3.y) * (pos.x - p3.x) + (p3.x - p2.x) * (pos.y - p3.y)) / det; // https://wikimedia.org/api/rest_v1/media/math/render/svg/dd9199d9fee273a1c2cc7f208ada749f46cec051

@@ -6,7 +6,7 @@
 #include <SDL2/SDL.h>
 #include "../types.h"
 #include "widget.h"
-#include "../conteneurTextures.h"
+#include "../texturesContainer.h"
 
 class Menu
 {
@@ -22,7 +22,7 @@ class Menu
     void distributeEventToWidgets(SDL_Event evenement);
     void focusToNext();
     void drawBackground();
-    ConteneurTextures texturesContainer;
+    TexturesContainer texturesContainer;
     std::vector<Widget*> widgetsList;
     std::string backgroundImage;
     bool8 stateChanged;

@@ -4,7 +4,7 @@
 #include <SDL2/SDL_ttf.h>
 #include "widget.h"
 #include "../types.h"
-#include "../conteneurTextures.h"
+#include "../texturesContainer.h"
 
 class NumericInput : public Widget
 {
@@ -21,7 +21,7 @@ class NumericInput : public Widget
     void changeMax(sint32 max);
 
   private:
-    ConteneurTextures texturesContainer;
+    TexturesContainer texturesContainer;
     GLuint textTexture;
     uint32 textWidth;
     uint32 textHeight;

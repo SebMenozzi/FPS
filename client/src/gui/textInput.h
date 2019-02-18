@@ -4,7 +4,7 @@
 #include <string>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
-#include "../conteneurTextures.h"
+#include "../texturesContainer.h"
 #include "widget.h"
 
 class TextInput : public Widget
@@ -20,7 +20,7 @@ class TextInput : public Widget
 
   private:
     std::string text;
-    ConteneurTextures texturesContainer;
+    TexturesContainer texturesContainer;
     GLuint textTexture;
     static TTF_Font* font;
     static uint32 compteurInstance;

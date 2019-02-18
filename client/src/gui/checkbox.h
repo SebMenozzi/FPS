@@ -2,7 +2,7 @@
 #define CHECKBOX_H_INCLUDED
 
 #include "widget.h"
-#include "../conteneurTextures.h"
+#include "../texturesContainer.h"
 
 class Checkbox : public Widget
 {
@@ -13,7 +13,7 @@ class Checkbox : public Widget
     void keyPressed(char key);
 
   private:
-    ConteneurTextures texturesContainer;
+    TexturesContainer texturesContainer;
     void drawWidget();
 
     void leftClickPressed();

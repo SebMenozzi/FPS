@@ -8,12 +8,13 @@ Checkbox::Checkbox(sint32 x, sint32 y, bool8 checked) : Widget(x, y)
   #define CASE_COCHEE_AVEC_FOCUS "case_cochee_avec_focus.bmp"
   #define CASE_PAS_COCHEE_AVEC_FOCUS "case_non_cochee_avec_focus.bmp"
 
-  this->texturesContainer.ajouter(CASE_COCHEE_SANS_FOCUS);
-  this->texturesContainer.ajouter(CASE_PAS_COCHEE_SANS_FOCUS);
-  this->texturesContainer.ajouter(CASE_COCHEE_AVEC_FOCUS);
-  this->texturesContainer.ajouter(CASE_PAS_COCHEE_AVEC_FOCUS);
-  this->width = this->texturesContainer.texture(CASE_COCHEE_SANS_FOCUS).largeur;
-  this->height = this->texturesContainer.texture(CASE_COCHEE_SANS_FOCUS).hauteur;
+  this->texturesContainer.addTexture(CASE_COCHEE_SANS_FOCUS);
+  this->texturesContainer.addTexture(CASE_PAS_COCHEE_SANS_FOCUS);
+  this->texturesContainer.addTexture(CASE_COCHEE_AVEC_FOCUS);
+  this->texturesContainer.addTexture(CASE_PAS_COCHEE_AVEC_FOCUS);
+
+  this->width = this->texturesContainer.getTexture(CASE_COCHEE_SANS_FOCUS).width;
+  this->height = this->texturesContainer.getTexture(CASE_COCHEE_SANS_FOCUS).height;
 
   this->checked = checked;
 }
@@ -28,17 +29,17 @@ void Checkbox::drawWidget()
   // Selection de l'image
   if (TRUE == this->hasFocus) {
     if (this->checked) {
-      glBindTexture(GL_TEXTURE_2D, this->texturesContainer.texture(CASE_COCHEE_AVEC_FOCUS).texture);
+      glBindTexture(GL_TEXTURE_2D, this->texturesContainer.getTexture(CASE_COCHEE_AVEC_FOCUS).texture);
     } else {
-      glBindTexture(GL_TEXTURE_2D, this->texturesContainer.texture(CASE_PAS_COCHEE_AVEC_FOCUS).texture);
+      glBindTexture(GL_TEXTURE_2D, this->texturesContainer.getTexture(CASE_PAS_COCHEE_AVEC_FOCUS).texture);
     }
   }
   else
   {
     if (this->checked) {
-      glBindTexture(GL_TEXTURE_2D, this->texturesContainer.texture(CASE_COCHEE_SANS_FOCUS).texture);
+      glBindTexture(GL_TEXTURE_2D, this->texturesContainer.getTexture(CASE_COCHEE_SANS_FOCUS).texture);
     } else {
-      glBindTexture(GL_TEXTURE_2D, this->texturesContainer.texture(CASE_PAS_COCHEE_SANS_FOCUS).texture);
+      glBindTexture(GL_TEXTURE_2D, this->texturesContainer.getTexture(CASE_PAS_COCHEE_SANS_FOCUS).texture);
     }
   }
 

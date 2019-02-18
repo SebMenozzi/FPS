@@ -12,12 +12,13 @@ NumericInput::NumericInput(sint32 x, sint32 y, sint32 value) : Widget(x, y)
   #define CHAMP_SAISIE_NUMERIQUE_BOUTON_BAS_ENFONCE "champ_saisie_numerique_bouton_bas_enfonce.bmp"
   #define CHAMP_SAISIE_NUMERIQUE_BOUTON_HAUT_ENFONCE "champ_saisie_numerique_bouton_haut_enfonce.bmp"
 
-  this->texturesContainer.ajouter(CHAMP_SAISIE_NUMERIQUE_SANS_FOCUS);
-  this->texturesContainer.ajouter(CHAMP_SAISIE_NUMERIQUE_AVEC_FOCUS);
-  this->texturesContainer.ajouter(CHAMP_SAISIE_NUMERIQUE_BOUTON_BAS_ENFONCE);
-  this->texturesContainer.ajouter(CHAMP_SAISIE_NUMERIQUE_BOUTON_HAUT_ENFONCE);
-  this->width = this->texturesContainer.texture(CHAMP_SAISIE_NUMERIQUE_SANS_FOCUS).largeur;
-  this->height = this->texturesContainer.texture(CHAMP_SAISIE_NUMERIQUE_SANS_FOCUS).hauteur;
+  this->texturesContainer.addTexture(CHAMP_SAISIE_NUMERIQUE_SANS_FOCUS);
+  this->texturesContainer.addTexture(CHAMP_SAISIE_NUMERIQUE_AVEC_FOCUS);
+  this->texturesContainer.addTexture(CHAMP_SAISIE_NUMERIQUE_BOUTON_BAS_ENFONCE);
+  this->texturesContainer.addTexture(CHAMP_SAISIE_NUMERIQUE_BOUTON_HAUT_ENFONCE);
+
+  this->width = this->texturesContainer.getTexture(CHAMP_SAISIE_NUMERIQUE_SANS_FOCUS).width;
+  this->height = this->texturesContainer.getTexture(CHAMP_SAISIE_NUMERIQUE_SANS_FOCUS).height;
   // by default
   this->min = 0;
   this->max = 100;
@@ -32,10 +33,10 @@ NumericInput::NumericInput(sint32 x, sint32 y, sint32 value) : Widget(x, y)
 
 NumericInput::~NumericInput()
 {
-  this->texturesContainer.supprimer(CHAMP_SAISIE_NUMERIQUE_SANS_FOCUS);
-  this->texturesContainer.supprimer(CHAMP_SAISIE_NUMERIQUE_AVEC_FOCUS);
-  this->texturesContainer.supprimer(CHAMP_SAISIE_NUMERIQUE_BOUTON_BAS_ENFONCE);
-  this->texturesContainer.supprimer(CHAMP_SAISIE_NUMERIQUE_BOUTON_HAUT_ENFONCE);
+  this->texturesContainer.deleteTexture(CHAMP_SAISIE_NUMERIQUE_SANS_FOCUS);
+  this->texturesContainer.deleteTexture(CHAMP_SAISIE_NUMERIQUE_AVEC_FOCUS);
+  this->texturesContainer.deleteTexture(CHAMP_SAISIE_NUMERIQUE_BOUTON_BAS_ENFONCE);
+  this->texturesContainer.deleteTexture(CHAMP_SAISIE_NUMERIQUE_BOUTON_HAUT_ENFONCE);
 
   glDeleteTextures(1, &this->textTexture);
 
@@ -181,14 +182,14 @@ void NumericInput::drawWidget()
   // Selection de l'image de fond
   if(TRUE == this->hasFocus) {
     if(this->topArrowHovered() && SURVOLE_ET_ENFONCE == this->state) { // Fleche du haut survolee et enfoncee
-      glBindTexture(GL_TEXTURE_2D, this->texturesContainer.texture(CHAMP_SAISIE_NUMERIQUE_BOUTON_HAUT_ENFONCE).texture);
+      glBindTexture(GL_TEXTURE_2D, this->texturesContainer.getTexture(CHAMP_SAISIE_NUMERIQUE_BOUTON_HAUT_ENFONCE).texture);
     } else if (this->bottomArrowHovered() && SURVOLE_ET_ENFONCE == this->state) { // Fleche du bas survolee et enfoncee
-      glBindTexture(GL_TEXTURE_2D, this->texturesContainer.texture(CHAMP_SAISIE_NUMERIQUE_BOUTON_BAS_ENFONCE).texture);
+      glBindTexture(GL_TEXTURE_2D, this->texturesContainer.getTexture(CHAMP_SAISIE_NUMERIQUE_BOUTON_BAS_ENFONCE).texture);
     } else { // Simplement en pocession du focus
-      glBindTexture(GL_TEXTURE_2D, this->texturesContainer.texture(CHAMP_SAISIE_NUMERIQUE_AVEC_FOCUS).texture);
+      glBindTexture(GL_TEXTURE_2D, this->texturesContainer.getTexture(CHAMP_SAISIE_NUMERIQUE_AVEC_FOCUS).texture);
     }
   } else { // Sans focus
-    glBindTexture(GL_TEXTURE_2D, this->texturesContainer.texture(CHAMP_SAISIE_NUMERIQUE_SANS_FOCUS).texture);
+    glBindTexture(GL_TEXTURE_2D, this->texturesContainer.getTexture(CHAMP_SAISIE_NUMERIQUE_SANS_FOCUS).texture);
   }
 
   // Application de l'image de fond

@@ -11,7 +11,7 @@
   #include <GL/gl.h>
   #include <GL/glu.h>
 #endif
-#include "conteneurTextures.h"
+#include "texturesContainer.h"
 
 class Objet3DStatique
 {
@@ -19,7 +19,7 @@ class Objet3DStatique
     typedef std::set<std::string> Textures;
 
     Textures textures; // Les textures de l'objet
-    ConteneurTextures conteneurTextures;
+    TexturesContainer texturesContainer;
     GLuint listeAffichage;
     GLuint listeRST;
 

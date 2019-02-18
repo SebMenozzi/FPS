@@ -39,7 +39,7 @@ Objet3DStatique::Objet3DStatique(std::string nomFichier)
         // Si la texture n'est pas deja creee
         if(this->textures.find(nomFichierTexture) == this->textures.end())
         {
-            this->conteneurTextures.ajouter(nomFichierTexture);
+            this->texturesContainer.addTexture(nomFichierTexture);
             this->textures.insert(nomFichierTexture);
         }
 
@@ -63,7 +63,7 @@ Objet3DStatique::Objet3DStatique(std::string nomFichier)
         }
 
         // Selection de la derniere texture rencontree texture
-        glBindTexture(GL_TEXTURE_2D, this->conteneurTextures.texture(textureCourante).texture);
+        glBindTexture(GL_TEXTURE_2D, this->texturesContainer.getTexture(textureCourante).texture);
 
         glBegin(GL_POLYGON);
 
@@ -88,7 +88,12 @@ Objet3DStatique::Objet3DStatique(std::string nomFichier)
           // Coordonnees 2D / 3D
           else if (5 == sscanf(ligne.c_str(), "%ld %ld %ld %ld %ld", &x2D, &y2D, &x3D, &y3D, &z3D))
           {
-              glTexCoord2f((float16)x2D / this->conteneurTextures.texture(textureCourante).largeur, (float16)y2D / this->conteneurTextures.texture(textureCourante).hauteur); glVertex3d(x3D, y3D, z3D);
+              glTexCoord2f(
+                (float16) x2D / this->texturesContainer.getTexture(textureCourante).width,
+                (float16) y2D / this->texturesContainer.getTexture(textureCourante).height
+              );
+
+              glVertex3d(x3D, y3D, z3D);
           }
 
           else
@@ -152,7 +157,7 @@ Objet3DStatique::~Objet3DStatique()
   // Liberation des textures
   for (Textures::iterator element = this->textures.begin(); element != textures.end(); element++)
   {
-    this->conteneurTextures.supprimer(*element);
+    this->texturesContainer.deleteTexture(*element);
   }
 
   glDeleteLists(this->listeAffichage, 1);

@@ -2,7 +2,7 @@
 #define IMAGEOVERLAY_H_INCLUDED
 
 #include "widgetOverlay.h"
-#include "../conteneurTextures.h"
+#include "../texturesContainer.h"
 
 class ImageOverlay : public WidgetOverlay
 {
@@ -13,7 +13,7 @@ class ImageOverlay : public WidgetOverlay
     void dessiner(void);
   private:
     std::string fichierImage;
-    //ConteneurTextures conteneurTextures;
+    //TexturesContainer texturesContainer;
 
     void genererTexture(void);
 

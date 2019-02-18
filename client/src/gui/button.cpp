@@ -18,14 +18,14 @@ Button::Button(SDL_Window* window, sint32 x, sint32 y, std::string text) : Widge
   #define BOUTON_SURVOLE_AVEC_FOCUS "bouton_survole_avec_focus.bmp"
   #define BOUTON_ENFONCE "bouton_enfonce.bmp"
 
-  this->texturesContainer.ajouter(BOUTON_PAS_SURVOLE_SANS_FOCUS);
-  this->texturesContainer.ajouter(BOUTON_PAS_SURVOLE_AVEC_FOCUS);
-  this->texturesContainer.ajouter(BOUTON_SURVOLE_SANS_FOCUS);
-  this->texturesContainer.ajouter(BOUTON_SURVOLE_AVEC_FOCUS);
-  this->texturesContainer.ajouter(BOUTON_ENFONCE);
+  this->texturesContainer.addTexture(BOUTON_PAS_SURVOLE_SANS_FOCUS);
+  this->texturesContainer.addTexture(BOUTON_PAS_SURVOLE_AVEC_FOCUS);
+  this->texturesContainer.addTexture(BOUTON_SURVOLE_SANS_FOCUS);
+  this->texturesContainer.addTexture(BOUTON_SURVOLE_AVEC_FOCUS);
+  this->texturesContainer.addTexture(BOUTON_ENFONCE);
 
-  this->width = this->texturesContainer.texture(BOUTON_ENFONCE).largeur;
-  this->height = this->texturesContainer.texture(BOUTON_ENFONCE).hauteur;
+  this->width = this->texturesContainer.getTexture(BOUTON_ENFONCE).width;
+  this->height = this->texturesContainer.getTexture(BOUTON_ENFONCE).height;
 
   if(0 == this->compteurInstances) {
       this->font = TTF_OpenFont("assets/Cartonsix NC.ttf", 35);
@@ -40,11 +40,11 @@ Button::Button(SDL_Window* window, sint32 x, sint32 y, std::string text) : Widge
 
 Button::~Button()
 {
-  this->texturesContainer.supprimer(BOUTON_PAS_SURVOLE_SANS_FOCUS);
-  this->texturesContainer.supprimer(BOUTON_PAS_SURVOLE_AVEC_FOCUS);
-  this->texturesContainer.supprimer(BOUTON_SURVOLE_SANS_FOCUS);
-  this->texturesContainer.supprimer(BOUTON_SURVOLE_AVEC_FOCUS);
-  this->texturesContainer.supprimer(BOUTON_ENFONCE);
+  this->texturesContainer.deleteTexture(BOUTON_PAS_SURVOLE_SANS_FOCUS);
+  this->texturesContainer.deleteTexture(BOUTON_PAS_SURVOLE_AVEC_FOCUS);
+  this->texturesContainer.deleteTexture(BOUTON_SURVOLE_SANS_FOCUS);
+  this->texturesContainer.deleteTexture(BOUTON_SURVOLE_AVEC_FOCUS);
+  this->texturesContainer.deleteTexture(BOUTON_ENFONCE);
 
   glDeleteTextures(1, &this->textTexture);
 
@@ -60,25 +60,25 @@ void Button::drawWidget()
   // Selection de l'image de fond
   switch (this->state) {
     case SURVOLE_ET_ENFONCE: {
-      glBindTexture(GL_TEXTURE_2D, this->texturesContainer.texture(BOUTON_ENFONCE).texture);
+      glBindTexture(GL_TEXTURE_2D, this->texturesContainer.getTexture(BOUTON_ENFONCE).texture);
     }
     break;
 
     case SURVOLE: {
       if(TRUE == this->hasFocus) {
-        glBindTexture(GL_TEXTURE_2D, this->texturesContainer.texture(BOUTON_SURVOLE_AVEC_FOCUS).texture);
+        glBindTexture(GL_TEXTURE_2D, this->texturesContainer.getTexture(BOUTON_SURVOLE_AVEC_FOCUS).texture);
       } else {
-        glBindTexture(GL_TEXTURE_2D, this->texturesContainer.texture(BOUTON_SURVOLE_SANS_FOCUS).texture);
+        glBindTexture(GL_TEXTURE_2D, this->texturesContainer.getTexture(BOUTON_SURVOLE_SANS_FOCUS).texture);
       }
     }
     break;
 
     case PAS_SURVOLE: {
       if(TRUE == this->hasFocus) {
-        glBindTexture(GL_TEXTURE_2D, this->texturesContainer.texture(BOUTON_PAS_SURVOLE_AVEC_FOCUS).texture);
+        glBindTexture(GL_TEXTURE_2D, this->texturesContainer.getTexture(BOUTON_PAS_SURVOLE_AVEC_FOCUS).texture);
       }
       else {
-        glBindTexture(GL_TEXTURE_2D, this->texturesContainer.texture(BOUTON_PAS_SURVOLE_SANS_FOCUS).texture);
+        glBindTexture(GL_TEXTURE_2D, this->texturesContainer.getTexture(BOUTON_PAS_SURVOLE_SANS_FOCUS).texture);
       }
     }
     break;

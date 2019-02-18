@@ -3,18 +3,13 @@
 
 #include "objet3DStatique.h"
 #include <string>
-#include "historiqueDesPositions.h"
 #include "point3Float.h"
-
-#include "objet3D.h"
 
 class Player : public Objet3DStatique
 {
   private:
     float16 radius;
     float16 verticalAngle;
-
-    HistoriqueDesPositions positions;
 
     sint32 reapparitionTime;
     Point3Float reapparitionPoint;
@@ -24,8 +19,6 @@ class Player : public Objet3DStatique
     uint32 receivedShotsCount;
 
     std::string username;
-
-    Objet3D* objet3D;
 
   public:
     Player(float16 x, float16 y, float16 z, float16 horizontalAngle, float16 verticalAngle, float16 radius, std::string file);

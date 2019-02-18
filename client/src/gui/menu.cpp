@@ -13,7 +13,7 @@
 Menu::Menu(SDL_Window* window, std::string backgroundImage)
 {
   this->backgroundImage = backgroundImage;
-  this->texturesContainer.ajouter(this->backgroundImage);
+  this->texturesContainer.addTexture(this->backgroundImage);
   this->stateChanged = TRUE;
   this->window = window;
   this->windowWidth = 0;
@@ -33,7 +33,7 @@ Menu::Menu(SDL_Window* window, std::string backgroundImage)
 
 Menu::~Menu()
 {
-  this->texturesContainer.supprimer(this->backgroundImage);
+  this->texturesContainer.deleteTexture(this->backgroundImage);
 }
 
 void Menu::draw(bool8 force)
@@ -266,7 +266,7 @@ void Menu::focusToNext()
 void Menu::drawBackground(void)
 {
   // Selection de l'image de fond
-  glBindTexture(GL_TEXTURE_2D, this->texturesContainer.texture(this->backgroundImage).texture);
+  glBindTexture(GL_TEXTURE_2D, this->texturesContainer.getTexture(this->backgroundImage).texture);
 
   // Application de l'image de fond
   glBegin(GL_QUADS);
